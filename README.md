@@ -18,8 +18,13 @@ The default position and size apply to every pop-up window. In the preferences p
 
 Rules are checked from top to bottom and the first match wins. The rule is matched against the URL of the tab being popped out, or the link URL when using "Open this link in pop-up window". Window geometry passed by another extension via `chrome.runtime.sendMessage` still takes precedence over any rule.
 
+# Layout
+* `src/` — the extension itself (`manifest.json`, scripts, options page, locales and icons). This is the folder to load unpacked and the one that gets zipped.
+* `build.js` — build script, see below.
+* `dist/` — build output (zips for the Chrome Web Store).
+
 # Icons
-The PNGs in `icon/` are rendered from the SVGs next to them. Chrome uses them in different places:
+The PNGs in `src/icon/` are rendered from the SVGs next to them. Chrome uses them in different places:
 
 * `icons` 16/32 in the manifest (`icon_black-*.png`): shown next to the extension's context menu items.
 * `icons` 48/128 (`icon-*.png`, blue): shown in `chrome://extensions` and in the install dialog.
@@ -27,17 +32,16 @@ The PNGs in `icon/` are rendered from the SVGs next to them. Chrome uses them in
 
 # Install (unpacked)
 1. Open `chrome://extensions` and turn on **Developer mode**.
-2. Click **Load unpacked** and select this folder (the one that contains `manifest.json`).
+2. Click **Load unpacked** and select the `src` folder (the one that contains `manifest.json`).
 
 # Build
-Creates the zip to upload to the Chrome Web Store:
+Creates `dist/lrusso-popup-window-<version>.zip`, the file to upload to the Chrome Web Store. It only needs Node.js, no dependencies:
 
 ```sh
-mkdir -p web-ext-artifacts
-zip -r -X web-ext-artifacts/lrusso-popup-window-$(node -p "require('./manifest.json').version").zip \
-  manifest.json background.js options.html options.js options.css LICENSE README.md _locales icon \
-  -x "icon/*.svg" -x "*.DS_Store"
+node build.js
 ```
 
+The version comes from `src/manifest.json`. The zip contains everything in `src/` except the SVG sources and dot files, plus `LICENSE`.
+
 # Contributing
-For updating/creating language translations please create a pull request; for new languages please start with [this file](_locales/en/messages.json) and translate it, storing it with the appropriate language tag (for a list of tags, see [here](https://developer.chrome.com/docs/webstore/i18n/?localeTable#choosing-locales-to-support)).
+For updating/creating language translations please create a pull request; for new languages please start with [this file](src/_locales/en/messages.json) and translate it, storing it with the appropriate language tag (for a list of tags, see [here](https://developer.chrome.com/docs/webstore/i18n/?localeTable#choosing-locales-to-support)).
