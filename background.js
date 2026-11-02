@@ -93,27 +93,46 @@ const ensurePreferences = () => {
 
 // ---- Context menus ------------------------------------------------------------
 
+// The page menu item says "Pop-up current page" in a normal window and
+// "Merge current page" inside a pop-up window. Its title follows the focused
+// window (see windows.onFocusChanged), since a right-click focuses the window
+// before the menu is shown.
+const pageMenuTitle = (windowInfo) => {
+  let inPopup = windowInfo && windowInfo.type === 'popup';
+  return chrome.i18n.getMessage(inPopup ? 'mergeThisPage' : 'popupThisPage');
+};
+
+const updatePageMenuTitle = async (windowId) => {
+  if (!preferences.moveThisPage) return;
+  let windowInfo = await windowsGet(windowId);
+  if (!windowInfo) return;
+  chrome.contextMenus.update(MENU_MOVE_THIS_PAGE, {title: pageMenuTitle(windowInfo)}, ignoreLastError);
+};
+
 // Menus are rebuilt from scratch so this is safe to call on every startup.
-const rebuildMenus = () => new Promise(resolve => {
-  chrome.contextMenus.removeAll(() => {
-    ignoreLastError();
-    if (preferences.openThisLink) {
-      chrome.contextMenus.create({
-        id: MENU_OPEN_THIS_LINK,
-        title: chrome.i18n.getMessage('openThisLink'),
-        contexts: ['link']
-      }, ignoreLastError);
-    }
-    if (preferences.moveThisPage) {
-      chrome.contextMenus.create({
-        id: MENU_MOVE_THIS_PAGE,
-        title: chrome.i18n.getMessage('moveThisPage'),
-        contexts: ['page', 'frame']
-      }, ignoreLastError);
-    }
-    resolve();
+const rebuildMenus = async () => {
+  let focused = preferences.moveThisPage ? await windowsGetLastFocused() : null;
+  await new Promise(resolve => {
+    chrome.contextMenus.removeAll(() => {
+      ignoreLastError();
+      if (preferences.openThisLink) {
+        chrome.contextMenus.create({
+          id: MENU_OPEN_THIS_LINK,
+          title: chrome.i18n.getMessage('openThisLink'),
+          contexts: ['link']
+        }, ignoreLastError);
+      }
+      if (preferences.moveThisPage) {
+        chrome.contextMenus.create({
+          id: MENU_MOVE_THIS_PAGE,
+          title: pageMenuTitle(focused),
+          contexts: ['page', 'frame']
+        }, ignoreLastError);
+      }
+      resolve();
+    });
   });
-});
+};
 
 const setActionIcon = () => {
   let base = preferences.iconColor === 1 ? 'icon/icon_w' : 'icon/icon';
@@ -465,8 +484,11 @@ chrome.windows.onCreated.addListener(windowInfo => {
 
 chrome.windows.onFocusChanged.addListener(windowId => {
   let window = winMapping.get(windowId);
-  if (!window) return;
-  window.lastFocus = performance.now();
+  if (window) {
+    window.lastFocus = performance.now();
+  }
+  if (windowId === chrome.windows.WINDOW_ID_NONE) return;
+  ready.then(() => updatePageMenuTitle(windowId));
 });
 
 chrome.commands.onCommand.addListener(command => {

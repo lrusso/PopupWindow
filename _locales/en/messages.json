@@ -24,8 +24,16 @@
     "description": ""
   },
   "moveThisPage": {
-    "message": "pop-up/merge current page",
-    "description": ""
+    "message": "Pop-up / merge current page",
+    "description": "Options page label for the page context menu item"
+  },
+  "popupThisPage": {
+    "message": "Pop-up current page",
+    "description": "Page context menu item shown in a normal window"
+  },
+  "mergeThisPage": {
+    "message": "Merge current page",
+    "description": "Page context menu item shown inside a pop-up window"
   },
   "defaultPosition": {
     "message": "Default pop-up window position",
