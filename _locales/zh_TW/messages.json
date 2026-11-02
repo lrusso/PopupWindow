@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "Popup window",
+    "message": "LRusso Popup Window",
     "description": ""
   },
   "extDescription": {
-    "message": "將 Tab 彈出至獨立視窗，去除頁籤列、網址列和書籤列等介面",
+    "message": "將分頁彈出至獨立視窗，去除頁籤列、網址列和書籤列。可全域或依網址設定視窗位置與大小。",
     "description": ""
   },
   "optionPageTitle": {
@@ -19,20 +19,12 @@
     "message": "右鍵選單項目:",
     "description": ""
   },
-  "tabMenu": {
-    "message": "分頁右鍵選單",
-    "description": ""
-  },
   "openThisLink": {
-  "message": "將此連結彈出至獨立視窗",
+    "message": "將此連結彈出至獨立視窗",
     "description": ""
   },
   "moveThisPage": {
     "message": "彈出/合併 目前頁面",
-    "description": ""
-  },
-  "moveThisTab": {
-    "message": "將目前分頁彈出至獨立視窗",
     "description": ""
   },
   "defaultPosition": {
@@ -93,6 +85,54 @@
   },
   "execute": {
     "message": "彈出/合併 頁面",
+    "description": ""
+  },
+  "urlRules": {
+    "message": "依網址設定",
+    "description": ""
+  },
+  "urlRulesHint": {
+    "message": "針對特定網頁覆寫視窗位置與大小。規則依序比對，以第一個符合者為準。可使用 * 作為萬用字元（例如 https://*.example.com/*）；不含 * 的規則會比對任何包含該文字的網址。寬度或高度留空則使用預設值。",
+    "description": ""
+  },
+  "urlPattern": {
+    "message": "網址規則",
+    "description": ""
+  },
+  "position": {
+    "message": "位置",
+    "description": ""
+  },
+  "width": {
+    "message": "寬度",
+    "description": ""
+  },
+  "height": {
+    "message": "高度",
+    "description": ""
+  },
+  "useDefault": {
+    "message": "使用預設",
+    "description": ""
+  },
+  "addUrlRule": {
+    "message": "新增規則",
+    "description": ""
+  },
+  "removeUrlRule": {
+    "message": "移除規則",
+    "description": ""
+  },
+  "moveUp": {
+    "message": "上移",
+    "description": ""
+  },
+  "moveDown": {
+    "message": "下移",
+    "description": ""
+  },
+  "noUrlRules": {
+    "message": "尚無依網址規則，所有網頁皆使用預設設定。",
     "description": ""
   }
 }

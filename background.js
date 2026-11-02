@@ -1,3 +1,8 @@
+// Background service worker (Manifest V3).
+// The worker can be shut down at any time, so it must not rely on in-memory
+// state surviving between events and must register every event listener
+// synchronously at the top level.
+
 let defaultPreference = {
   defaultPosition: 0,
   windowPositionLeft: 0,
@@ -6,198 +11,252 @@ let defaultPreference = {
   windowHeight: 400,
   openThisLink: true,
   moveThisPage: true,
-  moveThisTab: false,
   iconColor: 0, //0:black, 1:white
-  version: 4
+  // Per-URL overrides. Each rule: {pattern, position, left, top, width, height}
+  //   pattern:  URL pattern. '*' is a wildcard; a pattern without '*' matches any URL containing it.
+  //   position: -1 = use default, otherwise same values as defaultPosition (0..5).
+  //   left/top: used when position === 5 (custom position).
+  //   width/height: null = use default.
+  // Rules are evaluated in order; the first match wins.
+  urlRules: [],
+  version: 5
 };
 let preferences = {};
-let menu_openThisLink = null;
-let menu_moveThisPage = null;
-let menu_moveThisTab = null;
-let winMapping = new Map;
-let popupMapping = new Map;
+let winMapping = new Map;    // normal windows: id -> {id, lastFocus}
+let popupMapping = new Map;  // popup windows:  id -> {id, originalWindowId}
 
-const storageChangeHandler = (changes, area) => {
-  if(area === 'local') {
-    let changedItems = Object.keys(changes);
-    for (let item of changedItems) {
-      preferences[item] = changes[item].newValue;
-      switch (item) {
-        case 'iconColor':
-          setBrowserActionIcon();
-          break;
-        case 'openThisLink':
-          resetLinkMenu();
-          break;
-        case 'moveThisPage':
-          resetContextMenu();
-          break;
-        case 'moveThisTab':
-          resetTabMenu();
-          break;
-      }
-    }
-  }
-};
+const MENU_OPEN_THIS_LINK = 'openThisLink';
+const MENU_MOVE_THIS_PAGE = 'moveThisPage';
 
-const loadPreference = () => {
-  chrome.storage.local.get(results => {
-    if ((typeof results.length === 'number') && (results.length > 0)) {
-      results = results[0];
-    }
-    if (!results.version) {
-      preferences = defaultPreference;
-      chrome.storage.local.set(defaultPreference, res => {
-        chrome.storage.onChanged.addListener(storageChangeHandler);
-      });
-    } else {
-      preferences = results;
-      chrome.storage.onChanged.addListener(storageChangeHandler);
-    }
+const sessionArea = chrome.storage.session; // undefined before Chrome 102
 
+// ---- Small promise wrappers ---------------------------------------------------
+
+const ignoreLastError = () => { void chrome.runtime.lastError; };
+
+const storageGet = () => new Promise(resolve => {
+  chrome.storage.local.get(null, results => resolve(results || {}));
+});
+const storageSet = items => new Promise(resolve => {
+  chrome.storage.local.set(items, () => { ignoreLastError(); resolve(); });
+});
+const windowsGet = windowId => new Promise(resolve => {
+  chrome.windows.get(windowId, win => { ignoreLastError(); resolve(win || null); });
+});
+const windowsGetAll = windowTypes => new Promise(resolve => {
+  chrome.windows.getAll({windowTypes: windowTypes}, wins => { ignoreLastError(); resolve(wins || []); });
+});
+const windowsGetLastFocused = () => new Promise(resolve => {
+  chrome.windows.getLastFocused({populate: true}, win => { ignoreLastError(); resolve(win || null); });
+});
+const tabsGet = tabId => new Promise(resolve => {
+  chrome.tabs.get(tabId, tab => { ignoreLastError(); resolve(tab || null); });
+});
+
+// ---- Preferences --------------------------------------------------------------
+
+let preferencesReady = null;
+
+const loadPreference = async () => {
+  let results = await storageGet();
+  if (!results.version) {
+    preferences = Object.assign({}, defaultPreference);
+    await storageSet(defaultPreference);
+  } else {
+    preferences = results;
     if (preferences.version !== defaultPreference.version) {
       let update = {};
       let needUpdate = false;
-      for(let p in defaultPreference) {
-        if(preferences[p] === undefined) {
+      for (let p in defaultPreference) {
+        if (preferences[p] === undefined) {
           update[p] = defaultPreference[p];
+          preferences[p] = defaultPreference[p];
           needUpdate = true;
         }
       }
-      if(needUpdate) {
+      if (needUpdate) {
         update.version = defaultPreference.version;
-        chrome.storage.local.set(update);
+        preferences.version = defaultPreference.version;
+        await storageSet(update);
       }
     }
-
-    resetLinkMenu();
-    resetTabMenu();
-    resetContextMenu();
-    setBrowserActionIcon();
-  });
+  }
+  return preferences;
 };
 
-const createContextMenu = (mode) => {
-  if(menu_moveThisPage)
-    return;
-  menu_moveThisPage = chrome.contextMenus.create({
-    type: 'normal',
-    title: chrome.i18n.getMessage('moveThisPage'),
-    contexts: ['page', 'frame'],
-    onclick: (data, tab) => {
-      chrome.windows.getCurrent(windowInfo => {
-        if(windowInfo.type === 'popup') {
-          let popup = popupMapping.get(windowInfo.id);
-          mergeWindow(tab, popup ? popup.originalWindowId: null);
+const ensurePreferences = () => {
+  if (!preferencesReady) {
+    preferencesReady = loadPreference();
+  }
+  return preferencesReady;
+};
+
+// ---- Context menus ------------------------------------------------------------
+
+// Menus are rebuilt from scratch so this is safe to call on every startup.
+const rebuildMenus = () => new Promise(resolve => {
+  chrome.contextMenus.removeAll(() => {
+    ignoreLastError();
+    if (preferences.openThisLink) {
+      chrome.contextMenus.create({
+        id: MENU_OPEN_THIS_LINK,
+        title: chrome.i18n.getMessage('openThisLink'),
+        contexts: ['link']
+      }, ignoreLastError);
+    }
+    if (preferences.moveThisPage) {
+      chrome.contextMenus.create({
+        id: MENU_MOVE_THIS_PAGE,
+        title: chrome.i18n.getMessage('moveThisPage'),
+        contexts: ['page', 'frame']
+      }, ignoreLastError);
+    }
+    resolve();
+  });
+});
+
+const setActionIcon = () => {
+  let base = preferences.iconColor === 1 ? 'icon/icon_w' : 'icon/icon';
+  chrome.action.setIcon({
+    path: {
+      16: base + '-16.png',
+      32: base + '-32.png',
+      48: base + '-48.png'
+    }
+  }, ignoreLastError);
+};
+
+// ---- Per-URL rules ------------------------------------------------------------
+
+// Convert a user pattern into a RegExp. '*' matches any sequence of characters,
+// everything else is matched literally. Matching is case-insensitive.
+const patternToRegExp = (pattern) => {
+  let parts = pattern.split('*').map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  return new RegExp('^' + parts.join('.*') + '$', 'i');
+};
+
+// Return the first rule in preferences.urlRules that matches the given URL, or null.
+const findUrlRule = (url) => {
+  if (!url || !Array.isArray(preferences.urlRules)) {
+    return null;
+  }
+  for (let rule of preferences.urlRules) {
+    if (!rule || typeof rule.pattern !== 'string') {
+      continue;
+    }
+    let pattern = rule.pattern.trim();
+    if (pattern === '') {
+      continue;
+    }
+    try {
+      if (pattern.indexOf('*') === -1) {
+        // No wildcard: match any URL that contains the text.
+        if (url.toLowerCase().indexOf(pattern.toLowerCase()) !== -1) {
+          return rule;
         }
-        else {
-          popupWindow(tab);
-        }
-      });
+      }
+      else if (patternToRegExp(pattern).test(url)) {
+        return rule;
+      }
+    } catch (e) {
+      // Ignore malformed patterns.
     }
+  }
+  return null;
+};
+
+const toPositiveInt = (value) => {
+  let n = parseInt(value);
+  return (Number.isFinite(n) && n > 0) ? n : null;
+};
+
+// Merge the global preferences with the per-URL rule (if any) for this URL.
+const getWindowSettings = (url) => {
+  let settings = {
+    position: preferences.defaultPosition,
+    left: preferences.windowPositionLeft,
+    top: preferences.windowPositionTop,
+    width: preferences.windowWidth,
+    height: preferences.windowHeight
+  };
+  let rule = findUrlRule(url);
+  if (rule) {
+    let position = parseInt(rule.position);
+    if (Number.isFinite(position) && position >= 0 && position <= 5) {
+      settings.position = position;
+      if (position === 5) {
+        let left = parseInt(rule.left);
+        let top = parseInt(rule.top);
+        settings.left = Number.isFinite(left) ? left : 0;
+        settings.top = Number.isFinite(top) ? top : 0;
+      }
+    }
+    let width = toPositiveInt(rule.width);
+    let height = toPositiveInt(rule.height);
+    if (width !== null) settings.width = width;
+    if (height !== null) settings.height = height;
+  }
+  return settings;
+};
+
+// ---- Screen geometry ----------------------------------------------------------
+
+// Returns {left, top, width, height} of the usable area of the display that
+// contains the source window (or the primary display).
+const getWorkArea = async (sourceWindowId) => {
+  let displays = await new Promise(resolve => {
+    chrome.system.display.getInfo(info => { ignoreLastError(); resolve(info || []); });
   });
-};
-
-const resetContextMenu = (type) => {
-  if (preferences.moveThisPage) {
-    createContextMenu(type);
-  } else {
-    if(menu_moveThisPage !== null) {
-      chrome.contextMenus.remove(menu_moveThisPage, () => {
-        menu_moveThisPage = null;
-        contextMenuMode = '';
+  if (displays.length === 0) {
+    return {left: 0, top: 0, width: 1280, height: 800};
+  }
+  let display = displays.find(d => d.isPrimary) || displays[0];
+  if (displays.length > 1 && sourceWindowId !== undefined && sourceWindowId !== null) {
+    let win = await windowsGet(sourceWindowId);
+    if (win && typeof win.left === 'number' && typeof win.top === 'number') {
+      let cx = win.left + (win.width || 0) / 2;
+      let cy = win.top + (win.height || 0) / 2;
+      let hit = displays.find(d => {
+        let b = d.workArea;
+        return cx >= b.left && cx < b.left + b.width && cy >= b.top && cy < b.top + b.height;
       });
+      if (hit) display = hit;
     }
   }
+  let b = display.workArea || display.bounds;
+  return {left: b.left, top: b.top, width: b.width, height: b.height};
 };
 
-const createLinkMenu = () => {
-  if(menu_openThisLink)
-    return;
-  menu_openThisLink = chrome.contextMenus.create({
-    type: 'normal',
-    title: chrome.i18n.getMessage('openThisLink'),
-    contexts: ['link'],
-    onclick: (data, tab) => {
-      popupWindow(tab, data.linkUrl);
-    }
-  });
-}
+// ---- Popup / merge ------------------------------------------------------------
 
-const resetLinkMenu = () => {
-  if (preferences.openThisLink) {
-    createLinkMenu();
-  }
-  else {
-    if(menu_openThisLink !== null) {
-      chrome.contextMenus.remove(menu_openThisLink, () => {
-        menu_openThisLink = null;
-      });
-    }
-  }
-};
+const popupWindow = async (tab, targetUrl, winLeft, winTop, winWidth, winHeight) => {
+  await ensurePreferences();
+  let settings = getWindowSettings(targetUrl || (tab ? tab.url : undefined));
+  let width = winWidth ?? settings.width;
+  let height = winHeight ?? settings.height;
 
-const createTabMenu = () => {
-  if(menu_moveThisTab)
-    return;
-  menu_moveThisTab = chrome.contextMenus.create({
-    type: 'normal',
-    title: chrome.i18n.getMessage('moveThisTab'),
-    contexts: ['tab'],
-    onclick: (data, tab) => {
-      popupWindow(tab);
-    }
-  });
-}
-
-const resetTabMenu = () => {
-  if (preferences.moveThisTab) {
-    createTabMenu();
-  }
-  else {
-    if(menu_moveThisTab !== null) {
-      chrome.contextMenus.remove(menu_moveThisTab, () => {
-        menu_moveThisTab = null;
-      });
-    }
-  }
-};
-
-const setBrowserActionIcon = () => {
-  if(preferences.iconColor === 1) {
-    chrome.browserAction.setIcon({path: 'icon/icon_w.svg'});
-  }
-  else {
-    chrome.browserAction.setIcon({path: 'icon/icon.svg'});
-  }
-};
-
-const popupWindow = (tab, targetUrl, winLeft, winTop, winWidth, winHeight) => {
-  let screen = window.screen;
-  let width = winWidth ?? preferences.windowWidth;
-  let height = winHeight ?? preferences.windowHeight;
-
-  let top = screen.availTop !== undefined ? screen.availTop: screen.top;
-  let left = screen.availLeft !== undefined ? screen.availLeft: screen.left;
-  let sTop = top;
-  let sLeft = left;
-  let sWidth = screen.availWidth !== undefined ? screen.availWidth: screen.width;
-  let sHeight = screen.availHeight !== undefined ? screen.availHeight: screen.height;
-  if (preferences.defaultPosition === 0) {
+  let area = await getWorkArea(tab ? tab.windowId : undefined);
+  let sTop = area.top;
+  let sLeft = area.left;
+  let sWidth = area.width;
+  let sHeight = area.height;
+  let top = sTop;
+  let left = sLeft;
+  if (settings.position === 0) {
     top = sTop + Math.round((sHeight - height)/2);
     left = sLeft + Math.round((sWidth - width)/2);
   }
-  else if (preferences.defaultPosition === 5) {
-    top = preferences.windowPositionTop;
-    left = preferences.windowPositionLeft;
+  else if (settings.position === 5) {
+    top = settings.top;
+    left = settings.left;
   }
   else {
-    if (preferences.defaultPosition === 2 || preferences.defaultPosition === 4) {
+    if (settings.position === 2 || settings.position === 4) {
       top = sTop + sHeight - height;
       if(top < sTop)
         top = sTop;
     }
-    if (preferences.defaultPosition === 3 || preferences.defaultPosition === 4) {
+    if (settings.position === 3 || settings.position === 4) {
       left = sLeft + sWidth - width;
       if(left < sLeft)
         left = sLeft;
@@ -224,18 +283,22 @@ const popupWindow = (tab, targetUrl, winLeft, winTop, winWidth, winHeight) => {
     setting.tabId = tab.id;
   }
   chrome.windows.create(setting, windowInfo => {
-    chrome.windows.update(windowInfo.id,{focused: true, top: top, left: left});
-    addToPopupMapping(windowInfo, tab.windowId);
+    ignoreLastError();
+    if (!windowInfo) return;
+    chrome.windows.update(windowInfo.id, {focused: true, top: top, left: left}, ignoreLastError);
+    addToPopupMapping(windowInfo, tab ? tab.windowId : null);
   });
 };
 
 const moveTab = (tabId, windowId) => {
-  chrome.tabs.move(tabId, {windowId: windowId, index: -1});
-  chrome.windows.update(windowId, {focused: true});
-  chrome.tabs.update(tabId, {active: true});
-}
+  chrome.tabs.move(tabId, {windowId: windowId, index: -1}, () => {
+    ignoreLastError();
+    chrome.windows.update(windowId, {focused: true}, ignoreLastError);
+    chrome.tabs.update(tabId, {active: true}, ignoreLastError);
+  });
+};
 
-const mergeWindow = (tab, windowId) => {
+const mergeWindow = async (tab, windowId) => {
   let window = windowId ? winMapping.get(windowId) : null;
   if(!window) {
     for (let w of winMapping.values()) {
@@ -249,36 +312,148 @@ const mergeWindow = (tab, windowId) => {
     moveTab(tab.id, window.id);
   }
   else {
-    chrome.windows.getAll({windowTypes: ['normal']}, winsInfo => {
-      let normalWindows = [];
-      for(let win of winsInfo) { //Firefox bug, 'windowTypes' filter not working.
-        if(win.type === 'normal') normalWindows.push(winsInfo);
-      }
-      if(normalWindows.length === 0) { //no any window, create new one.
-        chrome.windows.create({
-          tabId: tab.id,
-          type: 'normal'
-        });
-      }
-      else {
-        moveTab(tab.id, normalWindows[0].id);
-      }
-    });
+    let normalWindows = await windowsGetAll(['normal']);
+    if(normalWindows.length === 0) { //no any window, create new one.
+      chrome.windows.create({
+        tabId: tab.id,
+        type: 'normal'
+      }, ignoreLastError);
+    }
+    else {
+      moveTab(tab.id, normalWindows[0].id);
+    }
   }
+};
+
+// Pop the tab out, or merge it back if it is already in one of our popups.
+const popupOrMerge = async (tab) => {
+  let windowInfo = await windowsGet(tab.windowId);
+  if (windowInfo && windowInfo.type === 'popup') {
+    let popup = popupMapping.get(windowInfo.id);
+    mergeWindow(tab, popup ? popup.originalWindowId : null);
+  }
+  else {
+    popupWindow(tab);
+  }
+};
+
+// ---- Window bookkeeping -------------------------------------------------------
+
+function addToWinMapping(window) {
+  winMapping.set(window.id, {
+    id: window.id,
+    lastFocus: 0
+  });
 }
 
-chrome.browserAction.onClicked.addListener(tab => {
-  popupWindow(tab);
+function addToPopupMapping(window, originalWindowId) {
+  popupMapping.set(window.id, {
+    id: window.id,
+    originalWindowId: originalWindowId
+  });
+  savePopupMapping();
+}
+
+// The service worker can be shut down at any time, so remember which popup came
+// from which window in session storage (when available).
+const savePopupMapping = () => {
+  if (!sessionArea) return;
+  let data = {};
+  for (let [id, popup] of popupMapping) {
+    data[id] = popup.originalWindowId;
+  }
+  sessionArea.set({popupMapping: data}, ignoreLastError);
+};
+
+const restorePopupMapping = () => new Promise(resolve => {
+  if (!sessionArea) {
+    resolve({});
+    return;
+  }
+  sessionArea.get('popupMapping', res => {
+    ignoreLastError();
+    resolve((res && res.popupMapping) || {});
+  });
+});
+
+// ---- Startup ------------------------------------------------------------------
+
+const init = async () => {
+  try {
+    await ensurePreferences();
+    let saved = await restorePopupMapping();
+    let windowInfos = await windowsGetAll(['normal', 'popup']);
+    for (let windowInfo of windowInfos) {
+      if (windowInfo.type === 'normal') {
+        addToWinMapping(windowInfo);
+      }
+      else if (windowInfo.type === 'popup') {
+        let originalWindowId = saved[windowInfo.id];
+        popupMapping.set(windowInfo.id, {
+          id: windowInfo.id,
+          originalWindowId: (originalWindowId !== undefined) ? originalWindowId : null
+        });
+      }
+    }
+    savePopupMapping();
+    await rebuildMenus();
+    setActionIcon();
+  } catch (e) {
+    console.error('PopupWindow init failed', e);
+  }
+};
+
+const ready = init();
+
+// ---- Event listeners (must be registered synchronously) -----------------------
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local') return;
+  ready.then(() => {
+    let menusChanged = false;
+    for (let item of Object.keys(changes)) {
+      preferences[item] = changes[item].newValue;
+      switch (item) {
+        case 'iconColor':
+          setActionIcon();
+          break;
+        case 'openThisLink':
+        case 'moveThisPage':
+          menusChanged = true;
+          break;
+      }
+    }
+    if (menusChanged) {
+      rebuildMenus();
+    }
+  });
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (!tab) return;
+  ready.then(() => {
+    switch (info.menuItemId) {
+      case MENU_OPEN_THIS_LINK:
+        popupWindow(tab, info.linkUrl);
+        break;
+      case MENU_MOVE_THIS_PAGE:
+        popupOrMerge(tab);
+        break;
+    }
+  });
+});
+
+chrome.action.onClicked.addListener(tab => {
+  ready.then(() => popupWindow(tab));
 });
 
 chrome.windows.onRemoved.addListener(windowId => {
   if(winMapping.get(windowId)) {
     winMapping.delete(windowId);
   }
-  else {
-    if(popupMapping.get(windowId)){
-      popupMapping.delete(windowId);
-    }
+  else if(popupMapping.get(windowId)) {
+    popupMapping.delete(windowId);
+    savePopupMapping();
   }
 });
 
@@ -294,57 +469,30 @@ chrome.windows.onFocusChanged.addListener(windowId => {
   window.lastFocus = performance.now();
 });
 
-chrome.windows.getAll({windowTypes: ['normal','popup']}, windowInfos => {
-  for (let windowInfo of windowInfos) {
-    if(windowInfo.type === 'normal') {
-      addToWinMapping(windowInfo);
-    }
-    else{
-      addToPopupMapping(windowInfo, null);
-    }
-  }
-});
-
-function addToWinMapping(window) {
-  winMapping.set(window.id, {
-    id: window.id,
-    lastFocus: 0
-  });
-}
-
-function addToPopupMapping(window, originalWindowId) {
-  popupMapping.set(window.id, {
-    id: window.id,
-    originalWindowId: originalWindowId
-  });
-}
-
-window.addEventListener('DOMContentLoaded', event => {
-  loadPreference();
-});
-
 chrome.commands.onCommand.addListener(command => {
-  if (command === "popupWindow") {
-    chrome.windows.getCurrent(windowInfo => {
-      chrome.tabs.query({active: true, currentWindow: true}, tabs => {
-        if ((typeof tabs !== 'undefined') && (tabs.length > 0)) {
-          let tab = tabs[0];
-          if(windowInfo.type === 'popup') {
-            let popup = popupMapping.get(windowInfo.id);
-            mergeWindow(tab, popup ? popup.originalWindowId: null);
-          }
-          else {
-            popupWindow(tab);
-          }
-        }
-      });
-    });
-  }
+  if (command !== 'popupWindow') return;
+  ready.then(async () => {
+    let windowInfo = await windowsGetLastFocused();
+    if (!windowInfo || !windowInfo.tabs) return;
+    let tab = windowInfo.tabs.find(t => t.active);
+    if (!tab) return;
+    if(windowInfo.type === 'popup') {
+      let popup = popupMapping.get(windowInfo.id);
+      mergeWindow(tab, popup ? popup.originalWindowId : null);
+    }
+    else {
+      popupWindow(tab);
+    }
+  });
 });
 
+// Other extensions can ask us to pop a tab out:
+//   chrome.runtime.sendMessage(extensionId, {action: 'popupWindow', tabId, left, top, width, height})
 const messageHandler = (message, sender, sendResponse) => {
-  if(message.action === 'popupWindow') {
-    chrome.tabs.get(message.tabId, tab => {
+  if(message && message.action === 'popupWindow') {
+    ready.then(async () => {
+      let tab = await tabsGet(message.tabId);
+      if (!tab) return;
       if(message.left && message.top) {
         popupWindow(tab, null, message.left, message.top, message.width, message.height);
       } else {
@@ -352,7 +500,7 @@ const messageHandler = (message, sender, sendResponse) => {
       }
     });
   }
-  else if(message.action === 'ack') {
+  else if(message && message.action === 'ack') {
     sendResponse({result:'ok'});
   }
 };

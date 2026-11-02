@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "Popup window",
+    "message": "LRusso Popup Window",
     "description": ""
   },
   "extDescription": {
-    "message": "Move tab to standalone window, without tabs bar, navigation bar and bookmark bar UI.",
+    "message": "Move a tab to a standalone window without tabs, address or bookmarks bar. Set position and size globally or per URL.",
     "description": ""
   },
   "optionPageTitle": {
@@ -19,20 +19,12 @@
     "message": "Context menu items:",
     "description": ""
   },
-  "tabMenu": {
-    "message": "Tab menu item",
-    "description": ""
-  },
   "openThisLink": {
     "message": "Open this link in pop-up window",
     "description": ""
   },
   "moveThisPage": {
     "message": "pop-up/merge current page",
-    "description": ""
-  },
-  "moveThisTab": {
-    "message": "Move current tab to pop-up window",
     "description": ""
   },
   "defaultPosition": {
@@ -93,6 +85,54 @@
   },
   "execute": {
     "message": "Pop-up/Merge page",
+    "description": ""
+  },
+  "urlRules": {
+    "message": "Per-URL settings",
+    "description": ""
+  },
+  "urlRulesHint": {
+    "message": "Override the position and size for specific pages. Rules are checked in order and the first match wins. Use * as a wildcard (e.g. https://*.example.com/*); a pattern without * matches any URL containing that text. Leave width or height empty to use the default.",
+    "description": ""
+  },
+  "urlPattern": {
+    "message": "URL pattern",
+    "description": ""
+  },
+  "position": {
+    "message": "Position",
+    "description": ""
+  },
+  "width": {
+    "message": "Width",
+    "description": ""
+  },
+  "height": {
+    "message": "Height",
+    "description": ""
+  },
+  "useDefault": {
+    "message": "Use default",
+    "description": ""
+  },
+  "addUrlRule": {
+    "message": "Add rule",
+    "description": ""
+  },
+  "removeUrlRule": {
+    "message": "Remove rule",
+    "description": ""
+  },
+  "moveUp": {
+    "message": "Move up",
+    "description": ""
+  },
+  "moveDown": {
+    "message": "Move down",
+    "description": ""
+  },
+  "noUrlRules": {
+    "message": "No per-URL rules yet. Default settings apply to every page.",
     "description": ""
   }
 }

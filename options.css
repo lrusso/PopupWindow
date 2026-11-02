@@ -35,3 +35,50 @@ label.windowPosition {
 .show {
   display: inline-block;
 }
+
+.invisible {
+  visibility: hidden;
+}
+
+.urlRulesSection {
+  margin-top: 12px;
+}
+
+.hint {
+  font-size: 0.9em;
+  opacity: 0.75;
+  margin: 2px 0 6px 0;
+  max-width: 600px;
+}
+
+table.urlRules {
+  border-collapse: collapse;
+  margin-bottom: 6px;
+}
+
+table.urlRules th {
+  text-align: left;
+  font-weight: normal;
+  font-size: 0.9em;
+  padding: 0 6px 2px 0;
+}
+
+table.urlRules td {
+  padding: 2px 6px 2px 0;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+input.rulePattern {
+  width: 220px;
+}
+
+input.ruleNumber {
+  width: 60px;
+}
+
+button.ruleAction {
+  min-width: 26px;
+  padding: 0 6px;
+  margin-right: 2px;
+}

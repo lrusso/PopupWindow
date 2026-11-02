@@ -1,43 +1,36 @@
 {
-  "description": "__MSG_extDescription__",
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "0.1.3",
-  "homepage_url": "https://github.com/ettoolong/PopupWindow",
+  "description": "__MSG_extDescription__",
+  "version": "0.2.0",
+  "default_locale": "en",
+  "homepage_url": "https://github.com/lrusso/PopupWindow",
   "icons": {
-    "16": "icon/icon.svg",
-    "32": "icon/icon.svg",
-    "48": "icon/icon.svg",
-    "64": "icon/icon.svg",
-    "96": "icon/icon.svg"
-  },
-  "applications": {
-    "gecko": {
-      "id": "PopupWindow@ettoolong",
-      "strict_min_version": "66.0"
-    }
-  },
-  "developer": {
-    "name": "Ett Chung",
-    "url": "https://github.com/ettoolong/PopupWindow"
+    "16": "icon/icon-16.png",
+    "32": "icon/icon-32.png",
+    "48": "icon/icon-48.png",
+    "128": "icon/icon-128.png"
   },
   "background": {
-    "scripts": ["background.js"]
+    "service_worker": "background.js"
   },
   "permissions": [
     "storage",
-    "contextMenus"
+    "contextMenus",
+    "tabs",
+    "system.display"
   ],
-  "browser_action": {
-    "browser_style": true,
+  "action": {
     "default_title": "__MSG_actionButtonTitle__",
-    "default_icon": "icon/icon.svg"
+    "default_icon": {
+      "16": "icon/icon-16.png",
+      "32": "icon/icon-32.png",
+      "48": "icon/icon-48.png"
+    }
   },
-  "default_locale": "en",
   "options_ui": {
     "page": "options.html",
-    "open_in_tab": false,
-    "browser_style": true
+    "open_in_tab": false
   },
   "commands": {
     "popupWindow": {
