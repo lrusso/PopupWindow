@@ -18,6 +18,13 @@ The default position and size apply to every pop-up window. In the preferences p
 
 Rules are checked from top to bottom and the first match wins. The rule is matched against the URL of the tab being popped out, or the link URL when using "Open this link in pop-up window". Window geometry passed by another extension via `chrome.runtime.sendMessage` still takes precedence over any rule.
 
+# Icons
+The PNGs in `icon/` are rendered from the SVGs next to them. Chrome uses them in different places:
+
+* `icons` 16/32 in the manifest (`icon_black-*.png`): shown next to the extension's context menu items.
+* `icons` 48/128 (`icon-*.png`, blue): shown in `chrome://extensions` and in the install dialog.
+* `action.default_icon` (`icon-*.png`, blue) and `icon_w-*.png` (light): the toolbar button, switchable in the preferences.
+
 # Install (unpacked)
 1. Open `chrome://extensions` and turn on **Developer mode**.
 2. Click **Load unpacked** and select this folder (the one that contains `manifest.json`).
