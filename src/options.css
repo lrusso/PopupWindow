@@ -36,10 +36,6 @@ label.windowPosition {
   display: inline-block;
 }
 
-.invisible {
-  visibility: hidden;
-}
-
 .urlRulesSection {
   margin-top: 12px;
 }
@@ -75,6 +71,11 @@ input.rulePattern {
 
 input.ruleNumber {
   width: 60px;
+}
+
+table.urlRules td select + input.ruleNumber,
+table.urlRules td input.ruleNumber + input.ruleNumber {
+  margin-left: 4px;
 }
 
 button.ruleAction {

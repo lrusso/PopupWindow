@@ -106,7 +106,7 @@ const parseOptionalInt = value => {
   return Number.isFinite(n) ? n : null;
 };
 
-const createRuleRow = (rule, index, count) => {
+const createRuleRow = (rule, index) => {
   let tr = document.createElement('tr');
   const addCell = child => {
     let td = document.createElement('td');
@@ -122,13 +122,12 @@ const createRuleRow = (rule, index, count) => {
     input.value = (value === null || value === undefined) ? '' : value;
     return input;
   };
-  const makeButton = (label, l10nId, onClick, disabled) => {
+  const makeButton = (label, l10nId, onClick) => {
     let button = document.createElement('button');
     button.type = 'button';
     button.className = 'ruleAction';
     button.textContent = label;
     button.title = chrome.i18n.getMessage(l10nId);
-    button.disabled = !!disabled;
     button.addEventListener('click', onClick);
     return button;
   };
@@ -159,15 +158,17 @@ const createRuleRow = (rule, index, count) => {
   });
   let rulePosition = parseOptionalInt(rule.position);
   position.value = String((rulePosition !== null && rulePosition >= 0 && rulePosition <= 5) ? rulePosition : -1);
-  addCell(position);
 
-  // Left / Top (only meaningful for custom position)
+  // Left / Top share the cell with the select and only show up for custom position;
+  // they have no header, the tooltip tells them apart.
   let left = makeNumber(rule.left ?? 0, 0, 'ruleNumber');
   let top = makeNumber(rule.top ?? 0, 0, 'ruleNumber');
+  left.title = chrome.i18n.getMessage('windowPositionLeft');
+  top.title = chrome.i18n.getMessage('windowPositionTop');
   const updateCustomVisibility = () => {
     let custom = position.value === '5';
-    left.classList.toggle('invisible', !custom);
-    top.classList.toggle('invisible', !custom);
+    left.classList.toggle('hidden', !custom);
+    top.classList.toggle('hidden', !custom);
   };
   position.addEventListener('change', () => {
     rule.position = parseInt(position.value);
@@ -183,8 +184,9 @@ const createRuleRow = (rule, index, count) => {
     saveUrlRules();
   });
   updateCustomVisibility();
-  addCell(left);
-  addCell(top);
+  let positionCell = addCell(position);
+  positionCell.appendChild(left);
+  positionCell.appendChild(top);
 
   // Width / Height (empty == use default)
   let width = makeNumber(rule.width, 30, 'ruleNumber');
@@ -203,20 +205,8 @@ const createRuleRow = (rule, index, count) => {
   addCell(height);
 
   // Actions
-  let rules = getUrlRules();
-  let actions = addCell();
-  actions.appendChild(makeButton('▲', 'moveUp', () => {
-    [rules[index - 1], rules[index]] = [rules[index], rules[index - 1]];
-    saveUrlRules();
-    renderUrlRules();
-  }, index === 0));
-  actions.appendChild(makeButton('▼', 'moveDown', () => {
-    [rules[index + 1], rules[index]] = [rules[index], rules[index + 1]];
-    saveUrlRules();
-    renderUrlRules();
-  }, index === count - 1));
-  actions.appendChild(makeButton('✕', 'removeUrlRule', () => {
-    rules.splice(index, 1);
+  addCell(makeButton('✕', 'removeUrlRule', () => {
+    getUrlRules().splice(index, 1);
     saveUrlRules();
     renderUrlRules();
   }));
@@ -229,7 +219,7 @@ const renderUrlRules = () => {
   let list = document.getElementById('urlRuleList');
   list.textContent = '';
   rules.forEach((rule, index) => {
-    list.appendChild(createRuleRow(rule, index, rules.length));
+    list.appendChild(createRuleRow(rule, index));
   });
   document.getElementById('urlRuleTable').classList.toggle('hidden', rules.length === 0);
   document.getElementById('urlRulesEmpty').classList.toggle('hidden', rules.length !== 0);

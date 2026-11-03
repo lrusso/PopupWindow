@@ -131,14 +131,6 @@
     "message": "Remove rule",
     "description": ""
   },
-  "moveUp": {
-    "message": "Move up",
-    "description": ""
-  },
-  "moveDown": {
-    "message": "Move down",
-    "description": ""
-  },
   "noUrlRules": {
     "message": "No per-URL rules yet. Default settings apply to every page.",
     "description": ""
