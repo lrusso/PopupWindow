@@ -1,23 +1,37 @@
-div.col {
-  vertical-align: top;
-  display: inline-block;
-}
-
 .itemDiv {
   display: block;
   margin-top:4px;
   min-height: 24px;
 }
 
-.itemLabel {
-  display: inline-block;
-  width: 60px;
+/* Default position / width / height: labels in one column so the controls line up,
+   and the select gets the same height as the number inputs. */
+.defaults {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  column-gap: 6px;
+  row-gap: 4px;
+  align-items: center;
+  justify-items: start;
+  margin-top: 4px;
 }
 
-select.itemInput {
-  display: inline-block;
-  width: 250px;
-  margin-left:12px;
+.defaults select,
+.defaults input[type="number"] {
+  box-sizing: border-box;
+  height: 24px;
+}
+
+/* Same width for the select and the two number inputs (153px is what Chrome
+   gives a default-size number input). */
+#defaultPosition,
+#windowWidth,
+#windowHeight {
+  width: 153px;
+}
+
+.defaults .field {
+  white-space: nowrap;
 }
 
 input.windowPosition {
