@@ -1,6 +1,6 @@
 # LRusso Popup Window
 
-Chrome extension (Manifest V3) that moves a tab to a standalone window, without tabs bar, navigation bar and bookmark bar UI.
+Chrome extension (Manifest V3) that moves a tab to a standalone window, without tabs bar, navigation bar and bookmark bar UI. The position and size of the pop-up window can be set globally or per URL.
 
 # Features
 
