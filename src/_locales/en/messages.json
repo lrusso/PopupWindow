@@ -15,17 +15,9 @@
     "message": "Move current tab to pop-up window",
     "description": ""
   },
-  "contextMenuItems": {
-    "message": "Context menu items:",
-    "description": ""
-  },
   "openThisLink": {
     "message": "Open this link in pop-up window",
     "description": ""
-  },
-  "moveThisPage": {
-    "message": "Pop-up / merge current page",
-    "description": "Options page label for the page context menu item"
   },
   "popupThisPage": {
     "message": "Pop-up current page",

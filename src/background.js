@@ -9,8 +9,6 @@ let defaultPreference = {
   windowPositionTop: 0,
   windowWidth: 500,
   windowHeight: 400,
-  openThisLink: true,
-  moveThisPage: true,
   // Per-URL overrides. Each rule: {pattern, position, left, top, width, height}
   //   pattern:  URL pattern. '*' is a wildcard; a pattern without '*' matches any URL containing it.
   //   position: -1 = use default, otherwise same values as defaultPosition (0..5).
@@ -102,7 +100,6 @@ const pageMenuTitle = (windowInfo) => {
 };
 
 const updatePageMenuTitle = async (windowId) => {
-  if (!preferences.moveThisPage) return;
   let windowInfo = await windowsGet(windowId);
   if (!windowInfo) return;
   chrome.contextMenus.update(MENU_MOVE_THIS_PAGE, {title: pageMenuTitle(windowInfo)}, ignoreLastError);
@@ -110,24 +107,20 @@ const updatePageMenuTitle = async (windowId) => {
 
 // Menus are rebuilt from scratch so this is safe to call on every startup.
 const rebuildMenus = async () => {
-  let focused = preferences.moveThisPage ? await windowsGetLastFocused() : null;
+  let focused = await windowsGetLastFocused();
   await new Promise(resolve => {
     chrome.contextMenus.removeAll(() => {
       ignoreLastError();
-      if (preferences.openThisLink) {
-        chrome.contextMenus.create({
-          id: MENU_OPEN_THIS_LINK,
-          title: chrome.i18n.getMessage('openThisLink'),
-          contexts: ['link']
-        }, ignoreLastError);
-      }
-      if (preferences.moveThisPage) {
-        chrome.contextMenus.create({
-          id: MENU_MOVE_THIS_PAGE,
-          title: pageMenuTitle(focused),
-          contexts: ['page', 'frame']
-        }, ignoreLastError);
-      }
+      chrome.contextMenus.create({
+        id: MENU_OPEN_THIS_LINK,
+        title: chrome.i18n.getMessage('openThisLink'),
+        contexts: ['link']
+      }, ignoreLastError);
+      chrome.contextMenus.create({
+        id: MENU_MOVE_THIS_PAGE,
+        title: pageMenuTitle(focused),
+        contexts: ['page', 'frame']
+      }, ignoreLastError);
       resolve();
     });
   });
@@ -416,18 +409,8 @@ const ready = init();
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'local') return;
   ready.then(() => {
-    let menusChanged = false;
     for (let item of Object.keys(changes)) {
       preferences[item] = changes[item].newValue;
-      switch (item) {
-        case 'openThisLink':
-        case 'moveThisPage':
-          menusChanged = true;
-          break;
-      }
-    }
-    if (menusChanged) {
-      rebuildMenus();
     }
   });
 });
