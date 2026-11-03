@@ -79,18 +79,6 @@
     "message": "Default pop-up window height",
     "description": ""
   },
-  "iconColor": {
-    "message": "Toolbar button icon color",
-    "description": ""
-  },
-  "iconColorBlack": {
-    "message": "Black",
-    "description": ""
-  },
-  "iconColorWhite": {
-    "message": "White",
-    "description": ""
-  },
   "execute": {
     "message": "Pop-up/Merge page",
     "description": ""

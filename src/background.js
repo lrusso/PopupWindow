@@ -11,7 +11,6 @@ let defaultPreference = {
   windowHeight: 400,
   openThisLink: true,
   moveThisPage: true,
-  iconColor: 0, //0:black, 1:white
   // Per-URL overrides. Each rule: {pattern, position, left, top, width, height}
   //   pattern:  URL pattern. '*' is a wildcard; a pattern without '*' matches any URL containing it.
   //   position: -1 = use default, otherwise same values as defaultPosition (0..5).
@@ -19,7 +18,7 @@ let defaultPreference = {
   //   width/height: null = use default.
   // Rules are evaluated in order; the first match wins.
   urlRules: [],
-  version: 5
+  version: 6
 };
 let preferences = {};
 let winMapping = new Map;    // normal windows: id -> {id, lastFocus}
@@ -132,17 +131,6 @@ const rebuildMenus = async () => {
       resolve();
     });
   });
-};
-
-const setActionIcon = () => {
-  let base = preferences.iconColor === 1 ? 'icon/icon_w' : 'icon/icon';
-  chrome.action.setIcon({
-    path: {
-      16: base + '-16.png',
-      32: base + '-32.png',
-      48: base + '-48.png'
-    }
-  }, ignoreLastError);
 };
 
 // ---- Per-URL rules ------------------------------------------------------------
@@ -416,7 +404,6 @@ const init = async () => {
     }
     savePopupMapping();
     await rebuildMenus();
-    setActionIcon();
   } catch (e) {
     console.error('PopupWindow init failed', e);
   }
@@ -433,9 +420,6 @@ chrome.storage.onChanged.addListener((changes, area) => {
     for (let item of Object.keys(changes)) {
       preferences[item] = changes[item].newValue;
       switch (item) {
-        case 'iconColor':
-          setActionIcon();
-          break;
         case 'openThisLink':
         case 'moveThisPage':
           menusChanged = true;
