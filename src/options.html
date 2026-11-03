@@ -37,18 +37,20 @@
         <div class="itemDiv urlRulesSection">
           <label data-l10n-id="urlRules">Per-URL settings</label>
           <p class="hint" data-l10n-id="urlRulesHint">Override the position and size for specific pages. Rules are checked in order and the first match wins. Use * as a wildcard (e.g. https://*.example.com/*); a pattern without * matches any URL containing that text. Leave width or height empty to use the default.</p>
-          <table id="urlRuleTable" class="urlRules">
-            <thead>
-              <tr>
-                <th data-l10n-id="urlPattern">URL pattern</th>
-                <th data-l10n-id="position">Position</th>
-                <th data-l10n-id="width">Width</th>
-                <th data-l10n-id="height">Height</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="urlRuleList"></tbody>
-          </table>
+          <div id="urlRuleTable" class="urlRuleScroll">
+            <table class="urlRules">
+              <thead>
+                <tr>
+                  <th data-l10n-id="urlPattern">URL pattern</th>
+                  <th data-l10n-id="position">Position</th>
+                  <th data-l10n-id="width">Width</th>
+                  <th data-l10n-id="height">Height</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="urlRuleList"></tbody>
+            </table>
+          </div>
           <p id="urlRulesEmpty" class="hint" data-l10n-id="noUrlRules">No per-URL rules yet. Default settings apply to every page.</p>
           <button type="button" id="addUrlRule" data-l10n-id="addUrlRule">Add rule</button>
         </div>

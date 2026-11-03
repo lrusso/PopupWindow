@@ -42,6 +42,10 @@ label.windowPosition {
   margin-left: 6px;
 }
 
+html {
+  overflow: hidden;
+}
+
 .hidden {
   display: none;
 }
@@ -54,16 +58,28 @@ label.windowPosition {
   margin-top: 12px;
 }
 
+.urlRulesSection > label {
+  display: block;
+  margin-bottom: 8px;
+}
+
 .hint {
   font-size: 0.9em;
+  line-height: 1.8;
   opacity: 0.75;
   margin: 2px 0 6px 0;
   max-width: 600px;
 }
 
+.urlRuleScroll {
+  max-height: 240px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  margin-bottom: 6px;
+}
+
 table.urlRules {
   border-collapse: collapse;
-  margin-bottom: 6px;
 }
 
 table.urlRules th {
