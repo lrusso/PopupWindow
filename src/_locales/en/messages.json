@@ -7,10 +7,6 @@
     "message": "Move a tab to a standalone window without tabs, address or bookmarks bar. Set position and size globally or per URL.",
     "description": ""
   },
-  "optionPageTitle": {
-    "message": "Pop-up window Preferences",
-    "description": ""
-  },
   "actionButtonTitle": {
     "message": "Move current tab to pop-up window",
     "description": ""

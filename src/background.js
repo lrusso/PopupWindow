@@ -3,7 +3,7 @@
 // state surviving between events and must register every event listener
 // synchronously at the top level.
 
-let defaultPreference = {
+const defaultPreference = {
   defaultPosition: 0,
   windowPositionLeft: 0,
   windowPositionTop: 0,
@@ -19,8 +19,8 @@ let defaultPreference = {
   version: 6
 };
 let preferences = {};
-let winMapping = new Map;    // normal windows: id -> {id, lastFocus}
-let popupMapping = new Map;  // popup windows:  id -> {id, originalWindowId}
+const winMapping = new Map();    // normal windows: id -> {id, lastFocus}
+const popupMapping = new Map();  // popup windows:  id -> {id, originalWindowId}
 
 const MENU_OPEN_THIS_LINK = 'openThisLink';
 const MENU_MOVE_THIS_PAGE = 'moveThisPage';
@@ -253,19 +253,21 @@ const popupWindow = async (tab, targetUrl, winLeft, winTop, winWidth, winHeight)
   else {
     if (settings.position === 2 || settings.position === 4) {
       top = sTop + sHeight - height;
-      if(top < sTop)
+      if (top < sTop) {
         top = sTop;
+      }
     }
     if (settings.position === 3 || settings.position === 4) {
       left = sLeft + sWidth - width;
-      if(left < sLeft)
+      if (left < sLeft) {
         left = sLeft;
+      }
     }
   }
-  if(winTop !== undefined) {
+  if (winTop !== undefined) {
     top = winTop;
   }
-  if(winLeft !== undefined) {
+  if (winLeft !== undefined) {
     left = winLeft;
   }
 
@@ -276,7 +278,7 @@ const popupWindow = async (tab, targetUrl, winLeft, winTop, winWidth, winHeight)
     width: width,
     height: height,
   };
-  if(targetUrl) {
+  if (targetUrl) {
     setting.url = targetUrl;
   }
   else {
@@ -300,7 +302,7 @@ const moveTab = (tabId, windowId) => {
 
 const mergeWindow = async (tab, windowId) => {
   let window = windowId ? winMapping.get(windowId) : null;
-  if(!window) {
+  if (!window) {
     for (let w of winMapping.values()) {
       if (!window || w.lastFocus > window.lastFocus) {
         window = w;
@@ -308,12 +310,12 @@ const mergeWindow = async (tab, windowId) => {
     }
   }
 
-  if(window) {
+  if (window) {
     moveTab(tab.id, window.id);
   }
   else {
     let normalWindows = await windowsGetAll(['normal']);
-    if(normalWindows.length === 0) { //no any window, create new one.
+    if (normalWindows.length === 0) { // no normal window left, create one
       chrome.windows.create({
         tabId: tab.id,
         type: 'normal'
@@ -339,20 +341,20 @@ const popupOrMerge = async (tab) => {
 
 // ---- Window bookkeeping -------------------------------------------------------
 
-function addToWinMapping(window) {
+const addToWinMapping = window => {
   winMapping.set(window.id, {
     id: window.id,
     lastFocus: 0
   });
-}
+};
 
-function addToPopupMapping(window, originalWindowId) {
+const addToPopupMapping = (window, originalWindowId) => {
   popupMapping.set(window.id, {
     id: window.id,
     originalWindowId: originalWindowId
   });
   savePopupMapping();
-}
+};
 
 // The service worker can be shut down at any time, so remember which popup came
 // from which window in session storage (when available).
@@ -434,17 +436,17 @@ chrome.action.onClicked.addListener(tab => {
 });
 
 chrome.windows.onRemoved.addListener(windowId => {
-  if(winMapping.get(windowId)) {
+  if (winMapping.get(windowId)) {
     winMapping.delete(windowId);
   }
-  else if(popupMapping.get(windowId)) {
+  else if (popupMapping.get(windowId)) {
     popupMapping.delete(windowId);
     savePopupMapping();
   }
 });
 
 chrome.windows.onCreated.addListener(windowInfo => {
-  if(windowInfo.type === 'normal') {
+  if (windowInfo.type === 'normal') {
     addToWinMapping(windowInfo);
   }
 });
@@ -465,7 +467,7 @@ chrome.commands.onCommand.addListener(command => {
     if (!windowInfo || !windowInfo.tabs) return;
     let tab = windowInfo.tabs.find(t => t.active);
     if (!tab) return;
-    if(windowInfo.type === 'popup') {
+    if (windowInfo.type === 'popup') {
       let popup = popupMapping.get(windowInfo.id);
       mergeWindow(tab, popup ? popup.originalWindowId : null);
     }
@@ -478,18 +480,18 @@ chrome.commands.onCommand.addListener(command => {
 // Other extensions can ask us to pop a tab out:
 //   chrome.runtime.sendMessage(extensionId, {action: 'popupWindow', tabId, left, top, width, height})
 const messageHandler = (message, sender, sendResponse) => {
-  if(message && message.action === 'popupWindow') {
+  if (message && message.action === 'popupWindow') {
     ready.then(async () => {
       let tab = await tabsGet(message.tabId);
       if (!tab) return;
-      if(message.left && message.top) {
+      if (message.left && message.top) {
         popupWindow(tab, null, message.left, message.top, message.width, message.height);
       } else {
         popupWindow(tab);
       }
     });
   }
-  else if(message && message.action === 'ack') {
+  else if (message && message.action === 'ack') {
     sendResponse({result:'ok'});
   }
 };

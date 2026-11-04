@@ -13,19 +13,19 @@ const readNumber = input => {
   return (input.validity.valid && Number.isFinite(n)) ? n : undefined;
 };
 
-const handleVelueChange = id => {
+const handleValueChange = id => {
   let elem = document.getElementById(id);
-  if(elem) {
+  if (elem) {
     let elemType = elem.getAttribute('type');
-    if(elemType === 'option') {
+    if (elemType === 'option') {
       elem.addEventListener('input', event => {
         saveToPreference(id, parseInt(elem.value));
       });
     }
-    else if(elemType === 'number') {
+    else if (elemType === 'number') {
       elem.addEventListener('input', event => {
         let n = readNumber(elem);
-        if(n !== undefined) {
+        if (n !== undefined) {
           saveToPreference(id, n);
         }
       });
@@ -35,18 +35,18 @@ const handleVelueChange = id => {
 
 const setValueToElem = (id, value) => {
   let elem = document.getElementById(id);
-  if(elem) {
+  if (elem) {
     let elemType = elem.getAttribute('type');
-    if(elemType === 'option') {
+    if (elemType === 'option') {
       let options = Array.from(elem.querySelectorAll('option'));
-      for(let option of options) {
-        if(parseInt(option.getAttribute('value')) === value) {
+      for (let option of options) {
+        if (parseInt(option.getAttribute('value')) === value) {
           option.selected = true;
           break;
         }
       }
     }
-    else if(elemType === 'number') {
+    else if (elemType === 'number') {
       elem.value = value;
     }
   }
@@ -56,7 +56,7 @@ const onDefaultPositionChange = () => {
   let defaultPosition = document.getElementById('defaultPosition');
   let elems = Array.from(document.querySelectorAll('.windowPosition'));
 
-  if(defaultPosition.value === '5') {
+  if (defaultPosition.value === '5') {
     elems.forEach(tag => {
       tag.classList.add('show');
       tag.classList.remove('hidden');
@@ -67,7 +67,7 @@ const onDefaultPositionChange = () => {
       tag.classList.remove('show');
     });
   }
-}
+};
 
 // ---- Per-URL rules -------------------------------------------------------
 
@@ -75,7 +75,7 @@ const onDefaultPositionChange = () => {
 const POSITION_L10N_IDS = ['center', 'topLeft', 'bottomLeft', 'topRight', 'bottomRight', 'customPosition'];
 
 const getUrlRules = () => {
-  if(!Array.isArray(currentPrefs.urlRules)) {
+  if (!Array.isArray(currentPrefs.urlRules)) {
     currentPrefs.urlRules = [];
   }
   return currentPrefs.urlRules;
@@ -94,7 +94,9 @@ const createRuleRow = (rule, index) => {
   let tr = document.createElement('tr');
   const addCell = child => {
     let td = document.createElement('td');
-    if(child) td.appendChild(child);
+    if (child) {
+      td.appendChild(child);
+    }
     tr.appendChild(td);
     return td;
   };
@@ -111,7 +113,9 @@ const createRuleRow = (rule, index) => {
   const bindRuleNumber = (input, key, emptyValue) => {
     input.addEventListener('input', () => {
       let value = input.value === '' ? emptyValue : readNumber(input);
-      if(value === undefined) return;
+      if (value === undefined) {
+        return;
+      }
       rule[key] = value;
       saveUrlRules();
     });
@@ -212,7 +216,7 @@ const addUrlRule = () => {
   saveUrlRules();
   renderUrlRules();
   let inputs = document.querySelectorAll('#urlRuleList input.rulePattern');
-  if(inputs.length > 0) {
+  if (inputs.length > 0) {
     inputs[inputs.length - 1].focus();
   }
 };
@@ -221,16 +225,16 @@ const addUrlRule = () => {
 
 const init = preferences => {
   currentPrefs = preferences;
-  for(let p in preferences) {
+  for (let p in preferences) {
     setValueToElem(p, preferences[p]);
-    handleVelueChange(p);
+    handleValueChange(p);
   }
   let l10nTags = Array.from(document.querySelectorAll('[data-l10n-id]'));
   l10nTags.forEach(tag => {
     tag.textContent = chrome.i18n.getMessage(tag.getAttribute('data-l10n-id'));
   });
   let defaultPosition = document.getElementById('defaultPosition');
-  defaultPosition.addEventListener('change', event=>{
+  defaultPosition.addEventListener('change', event => {
     onDefaultPositionChange();
   });
   onDefaultPositionChange();
