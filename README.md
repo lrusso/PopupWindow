@@ -17,7 +17,7 @@ The default position and size apply to every pop-up window. In the preferences p
 * **Position** — one of the standard positions, a custom left/top, or "Use default".
 * **Width / Height** — leave empty to keep the default value.
 
-Rules are checked from top to bottom and the first match wins. The rule is matched against the URL of the tab being popped out, or the link URL when using "Open this link in pop-up window". Window geometry passed by another extension via `chrome.runtime.sendMessage` still takes precedence over any rule.
+Rules are checked from top to bottom and the first match wins. The rule is matched against the URL of the tab being popped out, or the link URL when using "Open this link in pop-up window".
 
 # Layout
 

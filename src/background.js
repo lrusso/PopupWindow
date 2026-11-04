@@ -46,9 +46,6 @@ const windowsGetAll = windowTypes => new Promise(resolve => {
 const windowsGetLastFocused = (options = {}) => new Promise(resolve => {
   chrome.windows.getLastFocused(options, win => { ignoreLastError(); resolve(win || null); });
 });
-const tabsGet = tabId => new Promise(resolve => {
-  chrome.tabs.get(tabId, tab => { ignoreLastError(); resolve(tab || null); });
-});
 
 // ---- Preferences --------------------------------------------------------------
 
@@ -233,11 +230,13 @@ const getWorkArea = async (sourceWindowId) => {
 
 // ---- Popup / merge ------------------------------------------------------------
 
-const popupWindow = async (tab, targetUrl, winLeft, winTop, winWidth, winHeight) => {
+// Open the tab (or targetUrl, for links) in a pop-up window placed and sized
+// according to the preferences and the per-URL rules.
+const popupWindow = async (tab, targetUrl) => {
   await ensurePreferences();
   let settings = getWindowSettings(targetUrl || (tab ? tab.url : undefined));
-  let width = winWidth ?? settings.width;
-  let height = winHeight ?? settings.height;
+  let width = settings.width;
+  let height = settings.height;
 
   let area = await getWorkArea(tab ? tab.windowId : undefined);
   let sTop = area.top;
@@ -267,12 +266,6 @@ const popupWindow = async (tab, targetUrl, winLeft, winTop, winWidth, winHeight)
         left = sLeft;
       }
     }
-  }
-  if (winTop !== undefined) {
-    top = winTop;
-  }
-  if (winLeft !== undefined) {
-    left = winLeft;
   }
 
   let setting = {
@@ -453,25 +446,3 @@ chrome.commands.onCommand.addListener(command => {
     }
   });
 });
-
-// Other extensions can ask us to pop a tab out:
-//   chrome.runtime.sendMessage(extensionId, {action: 'popupWindow', tabId, left, top, width, height})
-const messageHandler = (message, sender, sendResponse) => {
-  if (message && message.action === 'popupWindow') {
-    ready.then(async () => {
-      let tab = await tabsGet(message.tabId);
-      if (!tab) return;
-      if (message.left && message.top) {
-        popupWindow(tab, null, message.left, message.top, message.width, message.height);
-      } else {
-        popupWindow(tab);
-      }
-    });
-  }
-  else if (message && message.action === 'ack') {
-    sendResponse({result:'ok'});
-  }
-};
-
-chrome.runtime.onMessage.addListener(messageHandler);
-chrome.runtime.onMessageExternal.addListener(messageHandler);
