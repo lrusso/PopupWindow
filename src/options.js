@@ -131,6 +131,7 @@ const createRuleRow = (rule, index) => {
     button.className = "ruleAction"
     button.textContent = label
     button.title = chrome.i18n.getMessage(l10nId)
+    button.setAttribute("aria-label", button.title)
     button.addEventListener("click", onClick)
     return button
   }
@@ -140,6 +141,7 @@ const createRuleRow = (rule, index) => {
   pattern.type = "text"
   pattern.className = "rulePattern"
   pattern.placeholder = "https://*.example.com/*"
+  pattern.setAttribute("aria-label", chrome.i18n.getMessage("urlPattern"))
   pattern.value = rule.pattern || ""
   pattern.addEventListener("input", () => {
     rule.pattern = pattern.value
@@ -149,6 +151,7 @@ const createRuleRow = (rule, index) => {
 
   // Position
   let position = document.createElement("select")
+  position.setAttribute("aria-label", chrome.i18n.getMessage("position"))
   let defaultOption = document.createElement("option")
   defaultOption.value = "-1"
   defaultOption.textContent = chrome.i18n.getMessage("useDefault")
@@ -172,6 +175,8 @@ const createRuleRow = (rule, index) => {
   let top = makeNumber(rule.top ?? 0, 0, "ruleNumber")
   left.title = chrome.i18n.getMessage("windowPositionLeft")
   top.title = chrome.i18n.getMessage("windowPositionTop")
+  left.setAttribute("aria-label", left.title)
+  top.setAttribute("aria-label", top.title)
   const updateCustomVisibility = () => {
     let custom = position.value === "5"
     left.classList.toggle("hidden", !custom)
@@ -192,6 +197,8 @@ const createRuleRow = (rule, index) => {
   // Width / Height (empty == use default)
   let width = makeNumber(rule.width, 1, "ruleNumber")
   let height = makeNumber(rule.height, 1, "ruleNumber")
+  width.setAttribute("aria-label", chrome.i18n.getMessage("width"))
+  height.setAttribute("aria-label", chrome.i18n.getMessage("height"))
   width.placeholder = document.getElementById("windowWidth").value
   height.placeholder = document.getElementById("windowHeight").value
   bindRuleNumber(width, "width", null)
@@ -268,9 +275,15 @@ const init = (preferences) => {
 window.addEventListener(
   "load",
   (event) => {
+    document.title = chrome.i18n.getMessage("extName")
     chrome.storage.local.get(null, (results) => {
       if (results && results.version) {
         init(results)
+      } else {
+        // Nothing stored yet (first run or cleared storage): start from the defaults.
+        let defaults = JSON.parse(JSON.stringify(defaultPreference))
+        chrome.storage.local.set(defaults)
+        init(defaults)
       }
     })
   },

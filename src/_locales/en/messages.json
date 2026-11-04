@@ -68,7 +68,7 @@
     "description": ""
   },
   "execute": {
-    "message": "Pop-up/Merge page",
+    "message": "Pop-up or merge the current page",
     "description": ""
   },
   "urlRules": {

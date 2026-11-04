@@ -3,21 +3,8 @@
 // state surviving between events and must register every event listener
 // synchronously at the top level.
 
-const defaultPreference = {
-  defaultPosition: 0,
-  windowPositionLeft: 0,
-  windowPositionTop: 0,
-  windowWidth: 500,
-  windowHeight: 400,
-  // Per-URL overrides. Each rule: {pattern, position, left, top, width, height}
-  //   pattern:  URL pattern. '*' is a wildcard; a pattern without '*' matches any URL containing it.
-  //   position: -1 = use default, otherwise same values as defaultPosition (0..5).
-  //   left/top: used when position === 5 (custom position).
-  //   width/height: null = use default.
-  // Rules are evaluated in order; the first match wins.
-  urlRules: [],
-  version: 6,
-}
+importScripts("defaults.js") // defaultPreference
+
 let preferences = {}
 const popupMapping = new Map() // popup windows: id -> {id, originalWindowId}
 let focusedNormalWindows = [] // ids of normal windows, most recently focused first

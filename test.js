@@ -126,6 +126,12 @@ const browser = ({ windows = [], local = {} } = {}) => {
       get: (target, prop) => (prop in target ? target[prop] : anything(prop)),
     })
     const context = vm.createContext({ chrome, console, setTimeout })
+    context.importScripts = (...files) => {
+      for (const file of files) {
+        const code = fs.readFileSync(path.join(__dirname, "src", file), "utf8")
+        new vm.Script(code).runInContext(context)
+      }
+    }
     new vm.Script(SOURCE).runInContext(context)
     await vm.runInContext("ready", context)
     worker = { context, listeners }
