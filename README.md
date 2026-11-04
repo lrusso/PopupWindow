@@ -23,6 +23,7 @@ Rules are checked from top to bottom and the first match wins. The rule is match
 
 - `src/` — the extension itself (`manifest.json`, scripts, options page, locales and icons). This is the folder to load unpacked and the one that gets zipped.
 - `build.js` — build script, see below.
+- `test.js` — tests for the service worker logic, see below.
 - `dist/` — build output (zips for the Chrome Web Store).
 
 # Icons
@@ -41,6 +42,14 @@ Get it from the Chrome Web Store: https://chromewebstore.google.com/detail/lruss
 
 1. Open `chrome://extensions` and turn on **Developer mode**.
 2. Click **Load unpacked** and select the `src` folder (the one that contains `manifest.json`).
+
+# Test
+
+Runs `src/background.js` in a Node sandbox with a simulated Chrome and checks the per-URL rules, the preference migration, pop-up creation and merging. No dependencies:
+
+```sh
+node test.js
+```
 
 # Build
 
