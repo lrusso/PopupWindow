@@ -19,8 +19,8 @@ const defaultPreference = {
   version: 6
 };
 let preferences = {};
-const winMapping = new Map();    // normal windows: id -> {id, lastFocus}
-const popupMapping = new Map();  // popup windows:  id -> {id, originalWindowId}
+const popupMapping = new Map();  // popup windows: id -> {id, originalWindowId}
+let focusedNormalWindows = [];   // ids of normal windows, most recently focused first
 
 const MENU_OPEN_THIS_LINK = 'openThisLink';
 const MENU_MOVE_THIS_PAGE = 'moveThisPage';
@@ -43,8 +43,8 @@ const windowsGet = windowId => new Promise(resolve => {
 const windowsGetAll = windowTypes => new Promise(resolve => {
   chrome.windows.getAll({windowTypes: windowTypes}, wins => { ignoreLastError(); resolve(wins || []); });
 });
-const windowsGetLastFocused = () => new Promise(resolve => {
-  chrome.windows.getLastFocused({populate: true}, win => { ignoreLastError(); resolve(win || null); });
+const windowsGetLastFocused = (options = {}) => new Promise(resolve => {
+  chrome.windows.getLastFocused(options, win => { ignoreLastError(); resolve(win || null); });
 });
 const tabsGet = tabId => new Promise(resolve => {
   chrome.tabs.get(tabId, tab => { ignoreLastError(); resolve(tab || null); });
@@ -99,10 +99,14 @@ const pageMenuTitle = (windowInfo) => {
   return chrome.i18n.getMessage(inPopup ? 'mergeThisPage' : 'popupThisPage');
 };
 
-const updatePageMenuTitle = async (windowId) => {
+const onWindowFocused = async (windowId) => {
   let windowInfo = await windowsGet(windowId);
   if (!windowInfo) return;
   chrome.contextMenus.update(MENU_MOVE_THIS_PAGE, {title: pageMenuTitle(windowInfo)}, ignoreLastError);
+  if (windowInfo.type === 'normal' && focusedNormalWindows[0] !== windowId) {
+    focusedNormalWindows = [windowId, ...focusedNormalWindows.filter(id => id !== windowId)].slice(0, 20);
+    saveFocusedNormalWindows();
+  }
 };
 
 // Menus are rebuilt from scratch so this is safe to call on every startup.
@@ -300,30 +304,28 @@ const moveTab = (tabId, windowId) => {
   });
 };
 
-const mergeWindow = async (tab, windowId) => {
-  let window = windowId ? winMapping.get(windowId) : null;
-  if (!window) {
-    for (let w of winMapping.values()) {
-      if (!window || w.lastFocus > window.lastFocus) {
-        window = w;
-      }
-    }
-  }
+// The window with this id, if it still exists and is a normal window.
+const normalWindow = async (windowId) => {
+  if (windowId === null || windowId === undefined) return null;
+  let windowInfo = await windowsGet(windowId);
+  return (windowInfo && windowInfo.type === 'normal') ? windowInfo : null;
+};
 
-  if (window) {
-    moveTab(tab.id, window.id);
+// Move the tab back to the window it came from. If that window is gone, use the
+// most recently focused normal window that still exists; if there is none, open a new one.
+const mergeWindow = async (tab, originalWindowId) => {
+  let target = await normalWindow(originalWindowId);
+  for (let i = 0; !target && i < focusedNormalWindows.length; i++) {
+    target = await normalWindow(focusedNormalWindows[i]);
+  }
+  if (!target) {
+    target = (await windowsGetAll(['normal']))[0] || null;
+  }
+  if (target) {
+    moveTab(tab.id, target.id);
   }
   else {
-    let normalWindows = await windowsGetAll(['normal']);
-    if (normalWindows.length === 0) { // no normal window left, create one
-      chrome.windows.create({
-        tabId: tab.id,
-        type: 'normal'
-      }, ignoreLastError);
-    }
-    else {
-      moveTab(tab.id, normalWindows[0].id);
-    }
+    chrome.windows.create({tabId: tab.id, type: 'normal'}, ignoreLastError);
   }
 };
 
@@ -339,14 +341,7 @@ const popupOrMerge = async (tab) => {
   }
 };
 
-// ---- Window bookkeeping -------------------------------------------------------
-
-const addToWinMapping = window => {
-  winMapping.set(window.id, {
-    id: window.id,
-    lastFocus: 0
-  });
-};
+// ---- Popup bookkeeping --------------------------------------------------------
 
 const addToPopupMapping = (window, originalWindowId) => {
   popupMapping.set(window.id, {
@@ -357,7 +352,8 @@ const addToPopupMapping = (window, originalWindowId) => {
 };
 
 // The service worker can be shut down at any time, so remember which popup came
-// from which window in session storage (when available).
+// from which window, and the focus order of normal windows, in session storage
+// (when available).
 const savePopupMapping = () => {
   if (!sessionArea) return;
   let data = {};
@@ -367,14 +363,19 @@ const savePopupMapping = () => {
   sessionArea.set({popupMapping: data}, ignoreLastError);
 };
 
-const restorePopupMapping = () => new Promise(resolve => {
+const saveFocusedNormalWindows = () => {
+  if (!sessionArea) return;
+  sessionArea.set({focusedNormalWindows: focusedNormalWindows}, ignoreLastError);
+};
+
+const restoreSession = () => new Promise(resolve => {
   if (!sessionArea) {
     resolve({});
     return;
   }
-  sessionArea.get('popupMapping', res => {
+  sessionArea.get(['popupMapping', 'focusedNormalWindows'], res => {
     ignoreLastError();
-    resolve((res && res.popupMapping) || {});
+    resolve(res || {});
   });
 });
 
@@ -383,19 +384,16 @@ const restorePopupMapping = () => new Promise(resolve => {
 const init = async () => {
   try {
     await ensurePreferences();
-    let saved = await restorePopupMapping();
-    let windowInfos = await windowsGetAll(['normal', 'popup']);
-    for (let windowInfo of windowInfos) {
-      if (windowInfo.type === 'normal') {
-        addToWinMapping(windowInfo);
-      }
-      else if (windowInfo.type === 'popup') {
-        let originalWindowId = saved[windowInfo.id];
-        popupMapping.set(windowInfo.id, {
-          id: windowInfo.id,
-          originalWindowId: (originalWindowId !== undefined) ? originalWindowId : null
-        });
-      }
+    let saved = await restoreSession();
+    let savedPopups = saved.popupMapping || {};
+    focusedNormalWindows = Array.isArray(saved.focusedNormalWindows) ? saved.focusedNormalWindows : [];
+    let popups = await windowsGetAll(['popup']);
+    for (let windowInfo of popups) {
+      let originalWindowId = savedPopups[windowInfo.id];
+      popupMapping.set(windowInfo.id, {
+        id: windowInfo.id,
+        originalWindowId: (originalWindowId !== undefined) ? originalWindowId : null
+      });
     }
     savePopupMapping();
     await rebuildMenus();
@@ -436,34 +434,20 @@ chrome.action.onClicked.addListener(tab => {
 });
 
 chrome.windows.onRemoved.addListener(windowId => {
-  if (winMapping.get(windowId)) {
-    winMapping.delete(windowId);
-  }
-  else if (popupMapping.get(windowId)) {
-    popupMapping.delete(windowId);
+  if (popupMapping.delete(windowId)) {
     savePopupMapping();
   }
 });
 
-chrome.windows.onCreated.addListener(windowInfo => {
-  if (windowInfo.type === 'normal') {
-    addToWinMapping(windowInfo);
-  }
-});
-
 chrome.windows.onFocusChanged.addListener(windowId => {
-  let window = winMapping.get(windowId);
-  if (window) {
-    window.lastFocus = performance.now();
-  }
   if (windowId === chrome.windows.WINDOW_ID_NONE) return;
-  ready.then(() => updatePageMenuTitle(windowId));
+  ready.then(() => onWindowFocused(windowId));
 });
 
 chrome.commands.onCommand.addListener(command => {
   if (command !== 'popupWindow') return;
   ready.then(async () => {
-    let windowInfo = await windowsGetLastFocused();
+    let windowInfo = await windowsGetLastFocused({populate: true});
     if (!windowInfo || !windowInfo.tabs) return;
     let tab = windowInfo.tabs.find(t => t.active);
     if (!tab) return;
