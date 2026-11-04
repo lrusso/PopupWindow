@@ -25,7 +25,7 @@ let focusedNormalWindows = [];   // ids of normal windows, most recently focused
 const MENU_OPEN_THIS_LINK = 'openThisLink';
 const MENU_MOVE_THIS_PAGE = 'moveThisPage';
 
-const sessionArea = chrome.storage.session; // undefined before Chrome 102
+const sessionArea = chrome.storage.session;
 
 // ---- Small promise wrappers ---------------------------------------------------
 
@@ -352,10 +352,8 @@ const addToPopupMapping = (window, originalWindowId) => {
 };
 
 // The service worker can be shut down at any time, so remember which popup came
-// from which window, and the focus order of normal windows, in session storage
-// (when available).
+// from which window, and the focus order of normal windows, in session storage.
 const savePopupMapping = () => {
-  if (!sessionArea) return;
   let data = {};
   for (let [id, popup] of popupMapping) {
     data[id] = popup.originalWindowId;
@@ -364,15 +362,10 @@ const savePopupMapping = () => {
 };
 
 const saveFocusedNormalWindows = () => {
-  if (!sessionArea) return;
   sessionArea.set({focusedNormalWindows: focusedNormalWindows}, ignoreLastError);
 };
 
 const restoreSession = () => new Promise(resolve => {
-  if (!sessionArea) {
-    resolve({});
-    return;
-  }
   sessionArea.get(['popupMapping', 'focusedNormalWindows'], res => {
     ignoreLastError();
     resolve(res || {});
