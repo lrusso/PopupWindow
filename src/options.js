@@ -6,6 +6,13 @@ const saveToPreference = (id, value) => {
   chrome.storage.local.set(update);
 };
 
+// Integer in a number input, or undefined when it is empty or outside its min/max.
+// Those states show up while typing and are ignored instead of saved.
+const readNumber = input => {
+  let n = parseInt(input.value);
+  return (input.validity.valid && Number.isFinite(n)) ? n : undefined;
+};
+
 const handleVelueChange = id => {
   let elem = document.getElementById(id);
   if(elem) {
@@ -17,7 +24,10 @@ const handleVelueChange = id => {
     }
     else if(elemType === 'number') {
       elem.addEventListener('input', event => {
-        saveToPreference(id, parseInt(elem.value));
+        let n = readNumber(elem);
+        if(n !== undefined) {
+          saveToPreference(id, n);
+        }
       });
     }
   }
@@ -96,6 +106,16 @@ const createRuleRow = (rule, index) => {
     input.value = (value === null || value === undefined) ? '' : value;
     return input;
   };
+  // Saves the input into rule[key] as it changes. An empty input stores emptyValue;
+  // an invalid or out-of-range one keeps the last saved value.
+  const bindRuleNumber = (input, key, emptyValue) => {
+    input.addEventListener('input', () => {
+      let value = input.value === '' ? emptyValue : readNumber(input);
+      if(value === undefined) return;
+      rule[key] = value;
+      saveUrlRules();
+    });
+  };
   const makeButton = (label, l10nId, onClick) => {
     let button = document.createElement('button');
     button.type = 'button';
@@ -149,32 +169,20 @@ const createRuleRow = (rule, index) => {
     updateCustomVisibility();
     saveUrlRules();
   });
-  left.addEventListener('input', () => {
-    rule.left = parseOptionalInt(left.value) ?? 0;
-    saveUrlRules();
-  });
-  top.addEventListener('input', () => {
-    rule.top = parseOptionalInt(top.value) ?? 0;
-    saveUrlRules();
-  });
+  bindRuleNumber(left, 'left', 0);
+  bindRuleNumber(top, 'top', 0);
   updateCustomVisibility();
   let positionCell = addCell(position);
   positionCell.appendChild(left);
   positionCell.appendChild(top);
 
   // Width / Height (empty == use default)
-  let width = makeNumber(rule.width, 30, 'ruleNumber');
-  let height = makeNumber(rule.height, 30, 'ruleNumber');
+  let width = makeNumber(rule.width, 1, 'ruleNumber');
+  let height = makeNumber(rule.height, 1, 'ruleNumber');
   width.placeholder = document.getElementById('windowWidth').value;
   height.placeholder = document.getElementById('windowHeight').value;
-  width.addEventListener('input', () => {
-    rule.width = parseOptionalInt(width.value);
-    saveUrlRules();
-  });
-  height.addEventListener('input', () => {
-    rule.height = parseOptionalInt(height.value);
-    saveUrlRules();
-  });
+  bindRuleNumber(width, 'width', null);
+  bindRuleNumber(height, 'height', null);
   addCell(width);
   addCell(height);
 

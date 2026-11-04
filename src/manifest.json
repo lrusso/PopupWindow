@@ -17,7 +17,7 @@
   "permissions": [
     "storage",
     "contextMenus",
-    "tabs",
+    "activeTab",
     "system.display"
   ],
   "action": {

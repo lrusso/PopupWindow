@@ -46,6 +46,11 @@ html {
   overflow: hidden;
 }
 
+input:invalid {
+  outline: 2px solid #d93025;
+  outline-offset: -2px;
+}
+
 .hidden {
   display: none;
 }
