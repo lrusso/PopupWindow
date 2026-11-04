@@ -2,12 +2,14 @@
 // Builds dist/lrusso-popup-window-<version>.zip, the package to upload to the
 // Chrome Web Store. Everything under src/ goes into the zip root, plus LICENSE.
 // Needs only Node.js (no dependencies): node build.js
+// Runs test.js first and refuses to build if a test fails.
 
 "use strict"
 
 const fs = require("fs")
 const path = require("path")
 const zlib = require("zlib")
+const { spawnSync } = require("child_process")
 
 const ROOT = __dirname
 const SRC = path.join(ROOT, "src")
@@ -176,8 +178,16 @@ const buildZip = (files) => {
 // Main
 // ---------------------------------------------------------------------------
 
+const runTests = () => {
+  let result = spawnSync(process.execPath, [path.join(ROOT, "test.js")], {
+    stdio: "inherit",
+  })
+  if (result.status !== 0) fail("tests failed, no zip was built")
+}
+
 const main = () => {
   if (!fs.existsSync(SRC)) fail("src/ folder not found")
+  runTests()
   let manifest = readManifest()
 
   let files = collectFiles(SRC)

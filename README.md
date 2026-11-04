@@ -53,7 +53,7 @@ node test.js
 
 # Build
 
-Creates `dist/lrusso-popup-window-<version>.zip`, the file to upload to the Chrome Web Store. It only needs Node.js, no dependencies:
+Runs the tests and then creates `dist/lrusso-popup-window-<version>.zip`, the file to upload to the Chrome Web Store. If a test fails, no zip is built. It only needs Node.js, no dependencies:
 
 ```sh
 node build.js
