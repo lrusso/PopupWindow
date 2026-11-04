@@ -33,7 +33,11 @@ The PNGs in `src/icon/` are rendered from the SVGs next to them. Chrome uses the
 * `icons` 48/128 (`icon-*.png`, blue): shown in `chrome://extensions` and in the install dialog.
 * `action.default_icon` (`icon-*.png`, blue): the toolbar button.
 
-# Install (unpacked)
+# Install
+
+Get it from the Chrome Web Store: https://chromewebstore.google.com/detail/lrusso-popup-window/cnldjjbdhocgjcdikkhfjikdjdkcpjia
+
+# Install from source (unpacked)
 
 1. Open `chrome://extensions` and turn on **Developer mode**.
 2. Click **Load unpacked** and select the `src` folder (the one that contains `manifest.json`).
