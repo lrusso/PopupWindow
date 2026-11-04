@@ -1,6 +1,6 @@
 .itemDiv {
   display: block;
-  margin-top:4px;
+  margin-top: 4px;
   min-height: 24px;
 }
 
@@ -35,7 +35,7 @@
 }
 
 input.windowPosition {
-  width:70px;
+  width: 70px;
 }
 
 label.windowPosition {

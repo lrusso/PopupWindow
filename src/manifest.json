@@ -15,12 +15,7 @@
   "background": {
     "service_worker": "background.js"
   },
-  "permissions": [
-    "storage",
-    "contextMenus",
-    "activeTab",
-    "system.display"
-  ],
+  "permissions": ["storage", "contextMenus", "activeTab", "system.display"],
   "action": {
     "default_title": "__MSG_actionButtonTitle__",
     "default_icon": {
