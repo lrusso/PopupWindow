@@ -270,6 +270,7 @@ const popupWindow = async (tab, targetUrl) => {
 
   let setting = {
     type: 'popup',
+    incognito: !!(tab && tab.incognito), // an incognito tab (or a link in one) stays incognito
     top: top,
     left: left,
     width: width,
@@ -297,28 +298,33 @@ const moveTab = (tabId, windowId) => {
   });
 };
 
-// The window with this id, if it still exists and is a normal window.
-const normalWindow = async (windowId) => {
+// Whether the tab can be moved into this window: a normal window in the same
+// mode (Chrome does not move tabs between incognito and regular windows).
+const canHold = (windowInfo, tab) =>
+  !!windowInfo && windowInfo.type === 'normal' && !!windowInfo.incognito === !!tab.incognito;
+
+// The window with this id, if it still exists and can hold the tab.
+const windowFor = async (windowId, tab) => {
   if (windowId === null || windowId === undefined) return null;
   let windowInfo = await windowsGet(windowId);
-  return (windowInfo && windowInfo.type === 'normal') ? windowInfo : null;
+  return canHold(windowInfo, tab) ? windowInfo : null;
 };
 
 // Move the tab back to the window it came from. If that window is gone, use the
 // most recently focused normal window that still exists; if there is none, open a new one.
 const mergeWindow = async (tab, originalWindowId) => {
-  let target = await normalWindow(originalWindowId);
+  let target = await windowFor(originalWindowId, tab);
   for (let i = 0; !target && i < focusedNormalWindows.length; i++) {
-    target = await normalWindow(focusedNormalWindows[i]);
+    target = await windowFor(focusedNormalWindows[i], tab);
   }
   if (!target) {
-    target = (await windowsGetAll(['normal']))[0] || null;
+    target = (await windowsGetAll(['normal'])).find(w => canHold(w, tab)) || null;
   }
   if (target) {
     moveTab(tab.id, target.id);
   }
   else {
-    chrome.windows.create({tabId: tab.id, type: 'normal'}, ignoreLastError);
+    chrome.windows.create({tabId: tab.id, type: 'normal', incognito: !!tab.incognito}, ignoreLastError);
   }
 };
 
