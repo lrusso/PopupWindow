@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>asset</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { width: 1400px; height: 560px; overflow: hidden; }
+      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #202124; background: #ffffff; position: relative; -webkit-font-smoothing: antialiased; }
+      .brand { display: flex; align-items: center; gap: 12px; }
+      .brand span { font-size: 18px; font-weight: 600; color: #1A73E8; }
+      h1 { font-size: 40px; line-height: 1.15; font-weight: 700; letter-spacing: -0.5px; }
+      p.lead { font-size: 20px; line-height: 1.45; color: #5F6368; }
+      ul.points { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+      ul.points li { font-size: 18px; color: #3C4043; display: flex; gap: 10px; align-items: flex-start; }
+      ul.points li::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: #1A73E8; margin-top: 7px; flex: none; }
+      .screen { position: absolute; border-radius: 16px; background: linear-gradient(135deg, #EEF3FB 0%, #DCE6F7 100%); }
+      .window { position: absolute; background: #fff; border: 1px solid #DADCE0; border-radius: 10px; box-shadow: 0 12px 32px rgba(60,64,67,.18), 0 2px 6px rgba(60,64,67,.12); overflow: hidden; }
+      .tabstrip { height: 38px; background: #DEE1E6; display: flex; align-items: flex-end; padding: 0 10px; gap: 4px; }
+      .tab { height: 30px; padding: 0 14px; border-radius: 8px 8px 0 0; background: #EDEFF2; font-size: 12px; color: #5F6368; display: flex; align-items: center; min-width: 96px; white-space: nowrap; }
+      .tab.active { background: #fff; color: #202124; }
+      .toolbar { height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border-bottom: 1px solid #E8EAED; }
+      .omnibox { flex: 1; height: 28px; border-radius: 14px; background: #F1F3F4; font-size: 12px; color: #5F6368; display: flex; align-items: center; padding: 0 12px; }
+      .titlebar { height: 30px; background: #F8F9FA; border-bottom: 1px solid #E8EAED; display: flex; align-items: center; padding: 0 10px; font-size: 12px; color: #3C4043; gap: 8px; }
+      .dots { display: flex; gap: 6px; } .dots i { width: 10px; height: 10px; border-radius: 50%; background: #DADCE0; display: block; }
+      .content { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+      .bar { height: 10px; border-radius: 5px; background: #E8EAED; } .bar.w80 { width: 80%; } .bar.w60 { width: 60%; } .bar.w40 { width: 40%; } .bar.blue { background: #D2E3FC; }
+      .bubble { height: 26px; border-radius: 13px; background: #E8F0FE; width: 70%; } .bubble.me { background: #D2E3FC; align-self: flex-end; width: 55%; }
+      .chip { position: absolute; background: #1A73E8; color: #fff; font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 14px; box-shadow: 0 2px 6px rgba(26,115,232,.35); white-space: nowrap; }
+      .chip.dark { background: #202124; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+      .tag { font-size:14px; font-weight:600; color:#1A73E8; background:#fff; border:1px solid #D2E3FC; border-radius:16px; padding:6px 14px; }
+    </style>
+  </head>
+  <body>
+    <div
+      style="position:absolute; inset:0; background:linear-gradient(120deg,#ffffff 0%,#EEF3FB 55%,#DCE6F7 100%);"
+    ></div>
+    <div
+      style="position:absolute; left:90px; top:0; height:560px; display:flex; flex-direction:column; justify-content:center; gap:22px; width:560px;"
+    >
+      <div style="display:flex; align-items:center; gap:22px;">
+        <svg width="96" height="96" viewBox="0 0 512 512" fill="#1A73E8">
+          <path
+            d="M405.34,405.332H106.66V106.668H240V64H106.66C83.191,64,64,83.197,64,106.668v298.664C64,428.803,83.191,448,106.66,448h298.68c23.469,0,42.66-19.197,42.66-42.668V272h-42.66V405.332z M288,64v42.668h87.474L159.999,322.133l29.866,29.866l215.476-215.47V224H448V64H288z"
+          />
+        </svg>
+        <div
+          style="font-size:44px; font-weight:700; color:#1A73E8; line-height:1.05;"
+        >
+          LRusso Popup Window
+        </div>
+      </div>
+      <div style="font-size:23px; line-height:1.4; color:#3C4043;">
+        Pop-up windows that remember how each site likes to open. Set a default
+        position and size, then give specific sites their own.
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <span class="tag">Per-URL rules</span
+        ><span class="tag">Position &amp; size</span
+        ><span class="tag">Merge back</span
+        ><span class="tag">No data collected</span>
+      </div>
+    </div>
+
+    <div class="screen" style="left:720px; top:38px; width:640px; height:484px;">
+      <div class="window" style="left:24px; top:34px; width:430px; height:330px;">
+        <div class="tabstrip">
+          <div class="tab active">Inbox – Mail</div>
+          <div class="tab">Calendar</div>
+          <div class="tab">Docs</div>
+        </div>
+        <div class="toolbar">
+          <div class="omnibox">mail.google.com/mail/u/0</div>
+          <svg
+            style="flex:none"
+            width="18"
+            height="18"
+            viewBox="0 0 512 512"
+            fill="#1A73E8"
+          >
+            <path
+              d="M405.34,405.332H106.66V106.668H240V64H106.66C83.191,64,64,83.197,64,106.668v298.664C64,428.803,83.191,448,106.66,448h298.68c23.469,0,42.66-19.197,42.66-42.668V272h-42.66V405.332z M288,64v42.668h87.474L159.999,322.133l29.866,29.866l215.476-215.47V224H448V64H288z"
+            />
+          </svg>
+        </div>
+        <div class="content">
+          <div class="bar w80"></div>
+          <div class="bar w60"></div>
+          <div class="bar w80"></div>
+          <div class="bar w40"></div>
+          <div class="bar w60"></div>
+          <div class="bar w80"></div>
+          <div class="bar w40"></div>
+        </div>
+      </div>
+      <div class="window" style="left:366px; top:22px; width:250px; height:150px;">
+        <div class="titlebar">
+          <div class="dots"><i></i><i></i><i></i></div>
+          Dashboard
+        </div>
+        <div class="content" style="gap:8px">
+          <div class="bar w60 blue" style="height:34px;border-radius:6px"></div>
+          <div class="bar w80"></div>
+          <div class="bar w40"></div>
+        </div>
+      </div>
+      <div class="chip" style="left:380px; top:178px;">
+        dashboard.example → top right
+      </div>
+      <div class="window" style="left:396px; top:226px; width:220px; height:290px;">
+        <div class="titlebar">
+          <div class="dots"><i></i><i></i><i></i></div>
+          WhatsApp
+        </div>
+        <div class="content" style="gap:8px">
+          <div class="bubble"></div>
+          <div class="bubble me"></div>
+          <div class="bubble"></div>
+          <div class="bubble me"></div>
+          <div class="bubble"></div>
+        </div>
+      </div>
+      <div class="chip" style="left:260px; top:430px;">
+        web.whatsapp.com → bottom right, 420×720
+      </div>
+    </div>
+  </body>
+</html>

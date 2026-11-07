@@ -25,6 +25,7 @@ Rules are checked from top to bottom and the first match wins. The rule is match
 - `build.js` — build script, see below.
 - `test.js` — tests for the service worker logic, see below.
 - `dist/` — build output (zips for the Chrome Web Store).
+- `store/` — Chrome Web Store graphics (screenshots and promo tiles) and, in `store/sources/`, the HTML pages they are rendered from.
 
 # Icons
 
@@ -33,6 +34,17 @@ The PNGs in `src/icon/` are rendered from the SVGs next to them. Chrome uses the
 - `icons` 16/32 in the manifest (`icon_black-*.png`): shown next to the extension's context menu items.
 - `icons` 48/128 (`icon-*.png`, blue): shown in `chrome://extensions` and in the install dialog.
 - `action.default_icon` (`icon-*.png`, blue): the toolbar button.
+
+# Store graphics
+
+`store/` holds the images uploaded to the Chrome Web Store listing: four 1280x800 screenshots, the 440x280 small promo tile and the 1400x560 marquee tile, all 24-bit PNG without alpha. Each one is rendered from the HTML page of the same name in `store/sources/` with headless Chrome at the exact size, for example:
+
+```sh
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars \
+  --window-size=1280,800 --screenshot=store/screenshot-1-overview.png store/sources/screenshot-1-overview.html
+```
+
+`store/sources/options-page.png` is a 2x capture of the real options page with sample rules, embedded by the second screenshot. Chrome writes PNGs with an alpha channel; convert them to 24-bit before uploading.
 
 # Install
 

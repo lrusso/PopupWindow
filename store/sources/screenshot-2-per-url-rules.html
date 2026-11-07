@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>asset</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { width: 1280px; height: 800px; overflow: hidden; }
+      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #202124; background: #ffffff; position: relative; -webkit-font-smoothing: antialiased; }
+      .brand { display: flex; align-items: center; gap: 12px; }
+      .brand span { font-size: 18px; font-weight: 600; color: #1A73E8; }
+      h1 { font-size: 40px; line-height: 1.15; font-weight: 700; letter-spacing: -0.5px; }
+      p.lead { font-size: 20px; line-height: 1.45; color: #5F6368; }
+      ul.points { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+      ul.points li { font-size: 18px; color: #3C4043; display: flex; gap: 10px; align-items: flex-start; }
+      ul.points li::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: #1A73E8; margin-top: 7px; flex: none; }
+      .screen { position: absolute; border-radius: 16px; background: linear-gradient(135deg, #EEF3FB 0%, #DCE6F7 100%); }
+      .window { position: absolute; background: #fff; border: 1px solid #DADCE0; border-radius: 10px; box-shadow: 0 12px 32px rgba(60,64,67,.18), 0 2px 6px rgba(60,64,67,.12); overflow: hidden; }
+      .tabstrip { height: 38px; background: #DEE1E6; display: flex; align-items: flex-end; padding: 0 10px; gap: 4px; }
+      .tab { height: 30px; padding: 0 14px; border-radius: 8px 8px 0 0; background: #EDEFF2; font-size: 12px; color: #5F6368; display: flex; align-items: center; min-width: 96px; white-space: nowrap; }
+      .tab.active { background: #fff; color: #202124; }
+      .toolbar { height: 40px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border-bottom: 1px solid #E8EAED; }
+      .omnibox { flex: 1; height: 28px; border-radius: 14px; background: #F1F3F4; font-size: 12px; color: #5F6368; display: flex; align-items: center; padding: 0 12px; }
+      .titlebar { height: 30px; background: #F8F9FA; border-bottom: 1px solid #E8EAED; display: flex; align-items: center; padding: 0 10px; font-size: 12px; color: #3C4043; gap: 8px; }
+      .dots { display: flex; gap: 6px; } .dots i { width: 10px; height: 10px; border-radius: 50%; background: #DADCE0; display: block; }
+      .content { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+      .bar { height: 10px; border-radius: 5px; background: #E8EAED; } .bar.w80 { width: 80%; } .bar.w60 { width: 60%; } .bar.w40 { width: 40%; } .bar.blue { background: #D2E3FC; }
+      .bubble { height: 26px; border-radius: 13px; background: #E8F0FE; width: 70%; } .bubble.me { background: #D2E3FC; align-self: flex-end; width: 55%; }
+      .chip { position: absolute; background: #1A73E8; color: #fff; font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 14px; box-shadow: 0 2px 6px rgba(26,115,232,.35); white-space: nowrap; }
+      .chip.dark { background: #202124; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+    </style>
+  </head>
+  <body>
+    <div
+      style="position:absolute; left:80px; top:150px; width:380px; display:flex; flex-direction:column; gap:28px;"
+    >
+      <div class="brand">
+        <svg width="36" height="36" viewBox="0 0 512 512" fill="#1A73E8">
+          <path
+            d="M405.34,405.332H106.66V106.668H240V64H106.66C83.191,64,64,83.197,64,106.668v298.664C64,428.803,83.191,448,106.66,448h298.68c23.469,0,42.66-19.197,42.66-42.668V272h-42.66V405.332z M288,64v42.668h87.474L159.999,322.133l29.866,29.866l215.476-215.47V224H448V64H288z"
+          /></svg
+        ><span>LRusso Popup Window</span>
+      </div>
+      <h1>Give each site its own position and size.</h1>
+      <p class="lead">
+        Add a rule with a URL pattern. Rules are checked in order and the first match
+        wins. Leave a size empty to keep the default.
+      </p>
+    </div>
+    <div
+      class="window"
+      style="left:500px; top:150px; width:720px; height:auto; border-radius:12px;"
+    >
+      <div class="titlebar" style="height:36px; font-size:13px;">
+        <svg width="16" height="16" viewBox="0 0 512 512" fill="#1A73E8">
+          <path
+            d="M405.34,405.332H106.66V106.668H240V64H106.66C83.191,64,64,83.197,64,106.668v298.664C64,428.803,83.191,448,106.66,448h298.68c23.469,0,42.66-19.197,42.66-42.668V272h-42.66V405.332z M288,64v42.668h87.474L159.999,322.133l29.866,29.866l215.476-215.47V224H448V64H288z"
+          />
+        </svg>
+        LRusso Popup Window – Options
+      </div>
+      <img src="options-page.png" style="display:block; width:720px; height:auto;">
+    </div>
+  </body>
+</html>
