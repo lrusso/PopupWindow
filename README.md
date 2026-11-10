@@ -44,7 +44,15 @@ The PNGs in `src/icon/` are rendered from the SVGs next to them. Chrome uses the
   --window-size=1280,800 --screenshot=store/screenshot-1-overview.png store/sources/screenshot-1-overview.html
 ```
 
-`store/sources/options-page.png` is a 2x capture of the real options page with sample rules, embedded by the second screenshot. Chrome writes PNGs with an alpha channel; convert them to 24-bit before uploading.
+`store/sources/options-page.png`, embedded by the second screenshot, is rendered from `store/sources/options-page.html`: the real options page (it loads `src/options.css`, `src/defaults.js` and `src/options.js`) with the English messages and some sample rules. Its body and messages are copies of `src/options.html` and `src/_locales/en/messages.json`, so update them when those change. Render it at 2x, in light mode and at the full page height:
+
+```sh
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars \
+  --blink-settings=preferredColorScheme=1 --force-device-scale-factor=2 \
+  --window-size=720,459 --screenshot=store/sources/options-page.png store/sources/options-page.html
+```
+
+Chrome writes PNGs with an alpha channel; convert them to 24-bit before uploading.
 
 # Install
 
