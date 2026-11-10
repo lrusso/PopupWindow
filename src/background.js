@@ -93,23 +93,10 @@ const ensurePreferences = () => {
 
 // ---- Context menus ------------------------------------------------------------
 
-// The page menu item says "Pop-up current page" in a normal window and
-// "Merge current page" inside a pop-up window. Its title follows the focused
-// window (see windows.onFocusChanged), since a right-click focuses the window
-// before the menu is shown.
-const pageMenuTitle = (windowInfo) => {
-  let inPopup = windowInfo && windowInfo.type === "popup"
-  return chrome.i18n.getMessage(inPopup ? "mergeThisPage" : "popupThisPage")
-}
-
+// Remembers the focus order of normal windows, used when merging.
 const onWindowFocused = async (windowId) => {
   let windowInfo = await windowsGet(windowId)
   if (!windowInfo) return
-  chrome.contextMenus.update(
-    MENU_MOVE_THIS_PAGE,
-    { title: pageMenuTitle(windowInfo) },
-    ignoreLastError
-  )
   if (windowInfo.type === "normal" && focusedNormalWindows[0] !== windowId) {
     focusedNormalWindows = [
       windowId,
@@ -120,8 +107,9 @@ const onWindowFocused = async (windowId) => {
 }
 
 // Menus are rebuilt from scratch so this is safe to call on every startup.
+// The page item has one title for both cases: Chrome can't change it per window,
+// and on macOS a right-click on a background window doesn't focus it.
 const rebuildMenus = async () => {
-  let focused = await windowsGetLastFocused()
   await new Promise((resolve) => {
     chrome.contextMenus.removeAll(() => {
       ignoreLastError()
@@ -136,7 +124,7 @@ const rebuildMenus = async () => {
       chrome.contextMenus.create(
         {
           id: MENU_MOVE_THIS_PAGE,
-          title: pageMenuTitle(focused),
+          title: chrome.i18n.getMessage("moveThisPage"),
           contexts: ["page", "frame"],
         },
         ignoreLastError

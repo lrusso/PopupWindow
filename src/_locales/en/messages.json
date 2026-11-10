@@ -15,13 +15,9 @@
     "message": "Open this link in pop-up window",
     "description": ""
   },
-  "popupThisPage": {
-    "message": "Pop-up current page",
-    "description": "Page context menu item shown in a normal window"
-  },
-  "mergeThisPage": {
-    "message": "Merge current page",
-    "description": "Page context menu item shown inside a pop-up window"
+  "moveThisPage": {
+    "message": "Pop-up/merge current page",
+    "description": ""
   },
   "defaultPosition": {
     "message": "Default pop-up window position",
