@@ -76,4 +76,3 @@ The version comes from `src/manifest.json`. The zip contains everything in `src/
 # Based on the work of
 
 https://github.com/ettoolong/PopupWindow
-
