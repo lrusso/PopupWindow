@@ -1,0 +1,156 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" type="text/css" href="../../src/options.css">
+    <script type="text/javascript">
+      // stand-in for the chrome API: the English messages and some sample rules
+      const MESSAGES = {
+        extName: "LRusso Popup Window",
+        extDescription: "Move a tab to a standalone window without tabs, address or bookmarks bar. Set position and size globally or per URL.",
+        actionButtonTitle: "Move current tab to pop-up window",
+        openThisLink: "Open this link in pop-up window",
+        moveThisPage: "Pop-up/merge current page",
+        defaultPosition: "Default pop-up window position",
+        center: "Center",
+        topLeft: "Top left corner",
+        bottomLeft: "Bottom left corner",
+        topRight: "Top right corner",
+        bottomRight: "Bottom right corner",
+        customPosition: "Custom position",
+        windowPositionLeft: "Left",
+        windowPositionTop: "Top",
+        windowWidth: "Default pop-up window width",
+        windowHeight: "Default pop-up window height",
+        iconColor: "Toolbar button icon color",
+        iconColorBlue: "Blue",
+        iconColorWhite: "White",
+        execute: "Pop-up or merge the current page",
+        urlRules: "Per-URL settings",
+        urlRulesHint: "Override the position and size for specific pages. Rules are checked in order and the first match wins. Use * as a wildcard (e.g. https://*.example.com/*); a pattern without * matches any URL containing that text. Leave width or height empty to use the default.",
+        urlPattern: "URL pattern",
+        position: "Position",
+        width: "Width",
+        height: "Height",
+        useDefault: "Use default",
+        addUrlRule: "Add rule",
+        removeUrlRule: "Remove rule",
+        noUrlRules: "No per-URL rules yet. Default settings apply to every page.",
+      }
+      const PREFS = {
+        version: 7,
+        defaultPosition: 0,
+        windowPositionLeft: 0,
+        windowPositionTop: 0,
+        windowWidth: 500,
+        windowHeight: 400,
+        iconColor: 0,
+        urlRules: [
+          { pattern: "web.whatsapp.com", position: 2, left: 0, top: 0, width: 420, height: 720 },
+          { pattern: "https://*.google.com/*", position: 0, left: 0, top: 0, width: 1100, height: 760 },
+          { pattern: "music.youtube.com", position: 3, left: 0, top: 0, width: 480, height: null },
+        ],
+      }
+      window.chrome = {
+        i18n: { getMessage: (id) => MESSAGES[id] || "" },
+        storage: { local: { get: (keys, callback) => callback(PREFS), set: () => {} } },
+      }
+    </script>
+    <script type="text/javascript" src="../../src/defaults.js"></script>
+    <script type="text/javascript" src="../../src/options.js"></script>
+    <title></title>
+  </head>
+  <body>
+    <div>
+      <div style="display: inline-block">
+        <div class="defaults">
+          <label for="defaultPosition" data-l10n-id="defaultPosition"
+            >Default pop-up window position</label
+          >
+          <div class="field">
+            <select id="defaultPosition" type="option">
+              <option value="0" data-l10n-id="center">Center</option>
+              <option value="1" data-l10n-id="topLeft">Top left corner</option>
+              <option value="2" data-l10n-id="bottomLeft">Bottom left corner</option>
+              <option value="3" data-l10n-id="topRight">Top right corner</option>
+              <option value="4" data-l10n-id="bottomRight">
+                Bottom right corner
+              </option>
+              <option value="5" data-l10n-id="customPosition">
+                Custom position
+              </option>
+            </select>
+            <label class="windowPosition" data-l10n-id="windowPositionLeft"
+              >Left</label
+            >
+            <input
+              class="windowPosition"
+              type="number"
+              id="windowPositionLeft"
+              min="0"
+            >
+            <label class="windowPosition" data-l10n-id="windowPositionTop"
+              >Top</label
+            >
+            <input
+              class="windowPosition"
+              type="number"
+              id="windowPositionTop"
+              min="0"
+            >
+          </div>
+
+          <label for="windowWidth" data-l10n-id="windowWidth"
+            >Default pop-up window width</label
+          >
+          <input type="number" id="windowWidth" min="1">
+
+          <label for="windowHeight" data-l10n-id="windowHeight"
+            >Default pop-up window height</label
+          >
+          <input type="number" id="windowHeight" min="1">
+        </div>
+
+        <div class="itemDiv urlRulesSection">
+          <label data-l10n-id="urlRules">Per-URL settings</label>
+          <p class="hint" data-l10n-id="urlRulesHint">
+            Override the position and size for specific pages. Rules are checked in
+            order and the first match wins. Use * as a wildcard (e.g.
+            https://*.example.com/*); a pattern without * matches any URL containing
+            that text. Leave width or height empty to use the default.
+          </p>
+          <div id="urlRuleTable" class="urlRuleScroll">
+            <table class="urlRules">
+              <thead>
+                <tr>
+                  <th data-l10n-id="urlPattern">URL pattern</th>
+                  <th data-l10n-id="position">Position</th>
+                  <th data-l10n-id="width">Width</th>
+                  <th data-l10n-id="height">Height</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="urlRuleList"></tbody>
+            </table>
+          </div>
+          <p id="urlRulesEmpty" class="hint" data-l10n-id="noUrlRules">
+            No per-URL rules yet. Default settings apply to every page.
+          </p>
+          <button type="button" id="addUrlRule" data-l10n-id="addUrlRule">
+            Add rule
+          </button>
+        </div>
+
+        <div class="itemDiv iconColorSection">
+          <div id="iconColor" type="radioGroup">
+            <label data-l10n-id="iconColor">Toolbar button icon color</label>
+            <input type="radio" id="iconColorBlue" name="iconColor" value="0">
+            <label for="iconColorBlue" data-l10n-id="iconColorBlue">Blue</label>
+            <input type="radio" id="iconColorWhite" name="iconColor" value="1">
+            <label for="iconColorWhite" data-l10n-id="iconColorWhite">White</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
