@@ -33,7 +33,7 @@ The PNGs in `src/icon/` are rendered from the SVGs next to them. Chrome uses the
 
 - `icons` 16/32 in the manifest (`icon_black-*.png`): shown next to the extension's context menu items.
 - `icons` 48/128 (`icon-*.png`, blue): shown in `chrome://extensions` and in the install dialog.
-- `action.default_icon` (`icon-*.png`, blue): the toolbar button.
+- `action.default_icon` (`icon-*.png`, blue) and `icon_w-*.png` (light): the toolbar button, switchable in the preferences.
 
 # Store graphics
 

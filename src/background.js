@@ -146,6 +146,20 @@ const rebuildMenus = async () => {
   })
 }
 
+const setActionIcon = () => {
+  let base = preferences.iconColor === 1 ? "icon/icon_w" : "icon/icon"
+  chrome.action.setIcon(
+    {
+      path: {
+        16: base + "-16.png",
+        32: base + "-32.png",
+        48: base + "-48.png",
+      },
+    },
+    ignoreLastError
+  )
+}
+
 // ---- Per-URL rules ------------------------------------------------------------
 
 // Convert a user pattern into a RegExp. '*' matches any sequence of characters,
@@ -426,6 +440,7 @@ const init = async () => {
     }
     savePopupMapping()
     await rebuildMenus()
+    setActionIcon()
   } catch (e) {
     console.error("PopupWindow init failed", e)
   }
@@ -440,6 +455,9 @@ chrome.storage.onChanged.addListener((changes, area) => {
   ready.then(() => {
     for (let item of Object.keys(changes)) {
       preferences[item] = changes[item].newValue
+      if (item === "iconColor") {
+        setActionIcon()
+      }
     }
   })
 })

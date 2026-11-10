@@ -176,12 +176,13 @@ const browser = ({ windows = [], local = {} } = {}) => {
 }
 
 const PREFS = {
-  version: 6,
+  version: 7,
   defaultPosition: 1,
   windowPositionLeft: 10,
   windowPositionTop: 20,
   windowWidth: 600,
   windowHeight: 300,
+  iconColor: 0,
   urlRules: [],
 }
 
@@ -341,11 +342,11 @@ describe("Preference migration", function () {
     const b = browser({ local: {} })
     await b.start()
     const prefs = await b.run("ensurePreferences()")
-    expect(prefs.version).toBe(6)
+    expect(prefs.version).toBe(7)
     expect(Array.isArray(prefs.urlRules)).toBe(true)
     expect(prefs.windowWidth).toBe(500)
     expect(b.calls.localSet.length).toBe(1)
-    expect(b.calls.localSet[0].version).toBe(6)
+    expect(b.calls.localSet[0].version).toBe(7)
   })
 
   it("Should add the missing keys and bump the version from an old version", async function () {
@@ -353,11 +354,11 @@ describe("Preference migration", function () {
     await b.start()
     const prefs = await b.run("ensurePreferences()")
     expect(Array.isArray(prefs.urlRules)).toBe(true)
-    expect(prefs.version).toBe(6)
+    expect(prefs.version).toBe(7)
     expect(prefs.windowWidth).toBe(600)
     expect(b.calls.localSet.length).toBe(1)
     expect(Array.isArray(b.calls.localSet[0].urlRules)).toBe(true)
-    expect(b.calls.localSet[0].version).toBe(6)
+    expect(b.calls.localSet[0].version).toBe(7)
   })
 
   it("Should not write anything for version 5 when no key is missing", async function () {

@@ -28,6 +28,15 @@ const handleValueChange = (id) => {
           saveToPreference(id, n)
         }
       })
+    } else if (elemType === "radioGroup") {
+      let radios = Array.from(elem.querySelectorAll("input[name=" + id + "]"))
+      for (let radio of radios) {
+        radio.addEventListener("input", (event) => {
+          if (radio.checked) {
+            saveToPreference(id, parseInt(radio.getAttribute("value")))
+          }
+        })
+      }
     }
   }
 }
@@ -46,6 +55,14 @@ const setValueToElem = (id, value) => {
       }
     } else if (elemType === "number") {
       elem.value = value
+    } else if (elemType === "radioGroup") {
+      let radios = Array.from(elem.querySelectorAll("input[name=" + id + "]"))
+      for (let radio of radios) {
+        if (parseInt(radio.getAttribute("value")) === value) {
+          radio.checked = true
+          break
+        }
+      }
     }
   }
 }
