@@ -4,13 +4,13 @@
   color-scheme: light dark;
 }
 
-/* Arial at the page's default size everywhere, form controls included (they
-   don't inherit the page font). */
+/* The system UI font at the page's default size everywhere, form controls
+   included (they don't inherit the page font). */
 body,
 input,
 select,
 button {
-  font-family: Arial, sans-serif;
+  font-family: system-ui, sans-serif;
   font-size: inherit;
 }
 
@@ -75,8 +75,26 @@ input:invalid {
   display: inline-block;
 }
 
-.urlRulesSection {
+/* Divider above the per-URL and toolbar icon sections: gray in light mode,
+   white in dark mode. */
+.urlRulesSection,
+.iconColorSection {
   margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #cccccc;
+}
+
+@media (prefers-color-scheme: dark) {
+  .urlRulesSection,
+  .iconColorSection {
+    border-top-color: #ffffff;
+  }
+}
+
+/* The first divider sits 3.5px lower, so the gap above it (to the height input)
+   looks the same as the gap below it (to the Per-URL settings text). */
+.urlRulesSection {
+  margin-top: 15.5px;
 }
 
 .urlRulesSection > label {
