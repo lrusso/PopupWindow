@@ -1,3 +1,19 @@
+/* Follow the browser's light or dark mode: Chrome passes its theme to the
+   embedded options page, and this switches the page and the form controls. */
+:root {
+  color-scheme: light dark;
+}
+
+/* Arial at the page's default size everywhere, form controls included (they
+   don't inherit the page font). */
+body,
+input,
+select,
+button {
+  font-family: Arial, sans-serif;
+  font-size: inherit;
+}
+
 .itemDiv {
   display: block;
   margin-top: 4px;
@@ -69,7 +85,6 @@ input:invalid {
 }
 
 .hint {
-  font-size: 0.9em;
   line-height: 1.8;
   opacity: 0.75;
   margin: 2px 0 6px 0;
@@ -90,7 +105,6 @@ table.urlRules {
 table.urlRules th {
   text-align: left;
   font-weight: normal;
-  font-size: 0.9em;
   padding: 0 6px 2px 0;
 }
 
